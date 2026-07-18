@@ -15,11 +15,32 @@ const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export async function seed() {
-  // Seed categories if empty
   const existing = await getAllCategories();
+
   if (existing.length === 0) {
+    // First run: seed all categories
     await setCategories(DEFAULT_CATEGORIES);
     console.log("[seed] Seeded 9 categories");
+  } else {
+    // Migrate: backfill isCatchAll / sortWeight on existing categories
+    const defaults = new Map(DEFAULT_CATEGORIES.map((c) => [c.id, c]));
+    let changed = false;
+    for (const cat of existing) {
+      const def = defaults.get(cat.id);
+      if (!def) continue;
+      if (def.isCatchAll && cat.isCatchAll === undefined) {
+        cat.isCatchAll = true;
+        changed = true;
+      }
+      if (def.sortWeight !== undefined && cat.sortWeight === undefined) {
+        cat.sortWeight = def.sortWeight;
+        changed = true;
+      }
+    }
+    if (changed) {
+      await setCategories(existing);
+      console.log("[seed] Migrated categories — added isCatchAll / sortWeight");
+    }
   }
 
   // Seed admin password if not set
