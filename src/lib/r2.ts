@@ -36,7 +36,7 @@ export async function getPresignedUploadUrl(
   });
 
   const uploadUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
-  const fileUrl = `https://${BUCKET}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${key}`;
+  const fileUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
 
   return { uploadUrl, fileUrl };
 }
