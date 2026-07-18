@@ -29,14 +29,20 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-400">加载中...</p>
+      <div className="flex items-center justify-center py-24">
+        <div
+          className="w-5 h-5 rounded-full border-2 animate-spin"
+          style={{
+            borderColor: "var(--color-border)",
+            borderTopColor: "var(--color-accent)",
+          }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <CategoryTabs
         categories={categories}
         active={activeCategory}
@@ -44,21 +50,46 @@ export default function HomePage() {
       />
 
       {categories.length === 0 && (
-        <div className="p-4 rounded-xl bg-amber-50 text-amber-700 text-sm">
-          还没有分类数据。请先配置 Vercel KV 环境变量并重启应用。
+        <div
+          className="p-5 rounded-[var(--radius-lg)] text-sm"
+          style={{
+            background: "var(--color-accent-glow)",
+            color: "var(--color-accent)",
+          }}
+        >
+          还没有分类数据。请先配置 Vercel KV 环境变量。
         </div>
       )}
 
       {sorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
-          <p className="text-5xl mb-4">📭</p>
-          <p className="text-lg">还没有资源</p>
-          <p className="text-sm mt-1">登录后就可以添加啦</p>
+        <div
+          className="flex flex-col items-center justify-center py-24"
+          style={{ color: "var(--color-text-muted)" }}
+        >
+          <p className="text-5xl mb-5 select-none">📭</p>
+          <p
+            className="mb-1.5"
+            style={{
+              fontSize: "var(--text-lg)",
+              color: "var(--color-text-soft)",
+              fontWeight: 500,
+            }}
+          >
+            还没有资源
+          </p>
+          <p style={{ fontSize: "var(--text-sm)" }}>
+            登录后就可以添加啦
+          </p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {sorted.map((r) => (
-            <ResourceCard key={r.id} resource={r} category={cMap.get(r.category)} />
+          {sorted.map((r, i) => (
+            <ResourceCard
+              key={r.id}
+              resource={r}
+              category={cMap.get(r.category)}
+              index={i}
+            />
           ))}
         </div>
       )}

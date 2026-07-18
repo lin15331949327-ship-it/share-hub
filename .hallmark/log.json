@@ -1,6 +1,14 @@
 [
   {
     "date": "2026-07-18",
+    "macrostructure": "Resource Grid",
+    "theme": "Atelier",
+    "enrichment": "none (typography + card microinteractions)",
+    "brief": "ShareHub home page — staggered card entrance, amber accent pills, glass-surface cards"
+  },
+
+  {
+    "date": "2026-07-18",
     "macrostructure": "Auth Card",
     "theme": "Atelier",
     "enrichment": "CSS soft-glow",

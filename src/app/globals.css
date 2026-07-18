@@ -117,6 +117,7 @@ body {
 
 .animate-card-in {
   animation: card-in var(--dur-entrance) var(--ease-out) both;
+  animation-delay: var(--card-delay, 0ms);
 }
 
 .animate-icon-float {

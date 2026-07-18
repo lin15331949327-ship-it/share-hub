@@ -18,13 +18,12 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
   function checkScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    // use requestAnimationFrame to avoid re-render feedback loops
     if (rafRef.current) return;
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = 0;
       const el2 = scrollRef.current;
       if (!el2) return;
-      const gap = 8; // hysteresis
+      const gap = 8;
       setCanScrollLeft((prev) => {
         const now = el2.scrollLeft > gap;
         return prev !== now ? now : prev;
@@ -36,12 +35,11 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
     });
   }
 
-  // scroll the active pill into view on mount & when active changes
+  // scroll active pill into view
   useEffect(() => {
     if (!active) return;
     const el = scrollRef.current;
     if (!el) return;
-    // find the active button and scroll it to center
     const btn = el.querySelector(`[data-cat="${active}"]`) as HTMLElement | null;
     if (btn) {
       const containerCenter = el.clientWidth / 2;
@@ -65,25 +63,8 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
   }, [categories]);
 
   function scroll(dir: "left" | "right") {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -280 : 280, behavior: "smooth" });
+    scrollRef.current?.scrollBy({ left: dir === "left" ? -280 : 280, behavior: "smooth" });
   }
-
-  const pill = (id: string | null, label: string) => (
-    <button
-      key={id ?? "__all__"}
-      data-cat={id ?? "__all__"}
-      onClick={() => onSelect(id)}
-      className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-        active === id
-          ? "bg-zinc-900 text-white shadow-md scale-105"
-          : "bg-white text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border border-zinc-200"
-      }`}
-    >
-      {label}
-    </button>
-  );
 
   return (
     <div className="relative group">
@@ -91,44 +72,78 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
       {canScrollLeft && (
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md border border-zinc-200 hover:bg-white transition-all"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center rounded-full border transition-all"
+          style={{
+            background: "var(--color-surface)",
+            borderColor: "var(--color-border)",
+            boxShadow: "var(--shadow-card)",
+          }}
         >
-          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4" style={{ color: "var(--color-text-soft)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
       )}
 
-      {/* Gradient fade right */}
+      {/* Gradient fades */}
       {canScrollRight && (
-        <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none bg-gradient-to-l from-zinc-50 to-transparent" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to left, var(--color-paper), transparent)" }} />
       )}
-
-      {/* Gradient fade left */}
       {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-zinc-50 to-transparent" />
+        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to right, var(--color-paper), transparent)" }} />
       )}
 
-      {/* Scrollable pills */}
-      <div
-        ref={scrollRef}
-        className="flex gap-2.5 overflow-x-auto scrollbar-hide scroll-smooth pb-1 px-0.5"
-      >
-        {pill(null, "全部")}
-        {categories.map((cat) => pill(cat.id, `${cat.icon} ${cat.name}`))}
+      {/* Pills */}
+      <div ref={scrollRef} className="flex gap-2.5 overflow-x-auto scrollbar-hide scroll-smooth pb-1 px-0.5">
+        {pill(null, "全部", active, onSelect)}
+        {categories.map((cat) => pill(cat.id, `${cat.icon} ${cat.name}`, active, onSelect))}
       </div>
 
       {/* Right arrow */}
       {canScrollRight && (
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md border border-zinc-200 hover:bg-white transition-all"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-9 h-9 flex items-center justify-center rounded-full border transition-all"
+          style={{
+            background: "var(--color-surface)",
+            borderColor: "var(--color-border)",
+            boxShadow: "var(--shadow-card)",
+          }}
         >
-          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4" style={{ color: "var(--color-text-soft)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
       )}
     </div>
+  );
+}
+
+function pill(
+  id: string | null,
+  label: string,
+  active: string | null,
+  onSelect: (id: string | null) => void
+) {
+  const isActive = active === id;
+  return (
+    <button
+      key={id ?? "__all__"}
+      data-cat={id ?? "__all__"}
+      onClick={() => onSelect(id)}
+      className="shrink-0 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200"
+      style={{
+        fontFamily: "var(--font-body)",
+        background: isActive ? "var(--color-accent)" : "var(--color-surface)",
+        color: isActive ? "#fff" : "var(--color-text-soft)",
+        border: isActive ? "1.5px solid var(--color-accent)" : "1px solid var(--color-border)",
+        boxShadow: isActive ? "0 2px 12px var(--color-accent-glow)" : "none",
+        transform: isActive ? "scale(1.05)" : "scale(1)",
+      }}
+    >
+      {label}
+    </button>
   );
 }
