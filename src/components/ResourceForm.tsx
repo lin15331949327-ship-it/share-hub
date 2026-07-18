@@ -99,7 +99,7 @@ export default function ResourceForm({ categories, resource }: Props) {
         editor?.chain().focus().setImage({ src: url }).run();
       } else if (type === "video") {
         editor?.chain().focus().insertContent(
-          `<video src="${url}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${url}">点此下载</a></p></video>`
+          `<video controls preload="metadata" playsinline style="width:100%;max-width:100%;border-radius:8px"><source src="${url}" type="${file.type || "video/mp4"}"><p>你的浏览器不支持视频播放，<a href="${url}">点此下载</a></p></video>`
         ).run();
       } else {
         const sizeMb = (file.size / 1024 / 1024).toFixed(1);
