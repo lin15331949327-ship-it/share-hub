@@ -73,7 +73,7 @@ export default function LoginPage() {
               color: "var(--color-text-soft)",
             }}
           >
-            没有密码？
+            没有密码？密码错误？
             <br />
             微信上戳一下我就行~
           </p>
