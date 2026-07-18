@@ -52,14 +52,29 @@ export default function ResourceForm({ categories, resource }: Props) {
   const UPLOAD_WORKER = "https://share-hub-upload.lin15331949327.workers.dev";
   const CHUNK_SIZE = 25 * 1024 * 1024; // 25MB per chunk
 
+  function getContentType(file: File): string {
+    if (file.type && file.type.length > 0) return file.type;
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const map: Record<string, string> = {
+      mp4: "video/mp4", webm: "video/webm", ogg: "video/ogg", ogv: "video/ogg",
+      mov: "video/quicktime", mkv: "video/x-matroska", avi: "video/x-msvideo",
+      jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp",
+      gif: "image/gif", svg: "image/svg+xml",
+      zip: "application/zip", rar: "application/x-rar-compressed", "7z": "application/x-7z-compressed",
+      exe: "application/x-msdownload", msi: "application/x-msdownload",
+    };
+    return map[ext] || "application/octet-stream";
+  }
+
   async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
     try {
+      const ct = encodeURIComponent(getContentType(file));
       let url: string;
 
       if (file.size <= 50 * 1024 * 1024) {
         setProgress({ current: 1, total: 1 });
-        const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}&ct=${encodeURIComponent(file.type)}`, {
+        const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}&ct=${ct}`, {
           method: "POST", body: file,
         });
         if (!res.ok) throw new Error("上传失败");
@@ -67,7 +82,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       } else {
         const totalParts = Math.ceil(file.size / CHUNK_SIZE);
 
-        const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}&ct=${encodeURIComponent(file.type)}`, { method: "POST" });
+        const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}&ct=${ct}`, { method: "POST" });
         if (!startRes.ok) throw new Error("创建分片上传失败");
         const { uploadId, key } = await startRes.json();
 
