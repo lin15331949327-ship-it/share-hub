@@ -39,6 +39,8 @@ export function sortForDisplay(
     const wA = weight.get(a.category) ?? 0;
     const wB = weight.get(b.category) ?? 0;
     if (wA !== wB) return wA - wB;
+    // same weight — group by category, then by time
+    if (a.category !== b.category) return a.category.localeCompare(b.category);
     return b.createdAt - a.createdAt;
   });
 }
