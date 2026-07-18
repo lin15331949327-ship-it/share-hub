@@ -22,6 +22,8 @@ export default function ResourceForm({ categories, resource }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+  const CHUNK = 10 * 1024 * 1024; // 10MB per chunk
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const packageInputRef = useRef<HTMLInputElement>(null);
@@ -52,13 +54,53 @@ export default function ResourceForm({ categories, resource }: Props) {
 
   async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
+    setUploadProgress("");
     try {
-      const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
-        method: "POST",
-        body: file,
-      });
-      if (!res.ok) throw new Error("上传失败");
-      const { url } = await res.json();
+      let url: string;
+
+      if (file.size <= 50 * 1024 * 1024) {
+        // Small file: simple upload
+        setUploadProgress("上传中...");
+        const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: "POST", body: file,
+        });
+        if (!res.ok) throw new Error("上传失败");
+        ({ url } = await res.json());
+      } else {
+        // Large file: multipart upload in 10MB chunks
+        const totalParts = Math.ceil(file.size / CHUNK);
+
+        // Start multipart
+        setUploadProgress("准备分片...");
+        const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}`, { method: "POST" });
+        if (!startRes.ok) throw new Error("启动分片上传失败");
+        const { uploadId, key } = await startRes.json();
+
+        // Upload parts
+        const parts: { etag: string; partNumber: number }[] = [];
+        for (let i = 0; i < totalParts; i++) {
+          const start = i * CHUNK;
+          const end = Math.min(start + CHUNK, file.size);
+          const chunk = file.slice(start, end);
+          setUploadProgress(`分片 ${i + 1}/${totalParts}...`);
+          const partRes = await fetch(
+            `${UPLOAD_WORKER}/mp/part?key=${encodeURIComponent(key)}&uploadId=${uploadId}&part=${i + 1}`,
+            { method: "POST", body: chunk }
+          );
+          if (!partRes.ok) throw new Error(`分片 ${i + 1} 上传失败`);
+          const { etag } = await partRes.json();
+          parts.push({ etag, partNumber: i + 1 });
+        }
+
+        // Complete multipart
+        setUploadProgress("组装中...");
+        const completeRes = await fetch(
+          `${UPLOAD_WORKER}/mp/complete?key=${encodeURIComponent(key)}&uploadId=${uploadId}`,
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ parts }) }
+        );
+        if (!completeRes.ok) throw new Error("分片组装失败");
+        ({ url } = await completeRes.json());
+      }
 
       if (type === "image") {
         editor?.chain().focus().setImage({ src: url }).run();
@@ -74,6 +116,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       }
     } catch (e: any) {
       alert(e.message || "上传失败");
+      setUploadProgress("");
     }
     setUploading(false);
   }
@@ -246,7 +289,7 @@ export default function ResourceForm({ categories, resource }: Props) {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
-              title="上传图片（最大 4.5MB）"
+              title="上传图片（不限大小）"
             >
               {uploading ? "⏳" : "🖼️"}
             </button>
@@ -255,7 +298,7 @@ export default function ResourceForm({ categories, resource }: Props) {
               onClick={() => videoInputRef.current?.click()}
               disabled={uploading}
               className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
-              title="上传视频（最大 500MB）"
+              title="上传视频（不限大小）"
             >
               📹
             </button>
@@ -264,10 +307,13 @@ export default function ResourceForm({ categories, resource }: Props) {
               onClick={() => packageInputRef.current?.click()}
               disabled={uploading}
               className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
-              title="上传安装包/文件（最大 500MB）"
+              title="上传安装包/文件（不限大小）"
             >
               📦
             </button>
+            {uploadProgress && (
+              <span className="text-xs text-zinc-400 self-center ml-1">{uploadProgress}</span>
+            )}
             <button
               type="button"
               onClick={insertVideo}
@@ -301,7 +347,7 @@ export default function ResourceForm({ categories, resource }: Props) {
             <input
               ref={packageInputRef}
               type="file"
-              accept=".exe,.msi,.zip,.rar,.7z,.dmg,.apk,.iso,.tar.gz,.tgz"
+              accept="*"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
