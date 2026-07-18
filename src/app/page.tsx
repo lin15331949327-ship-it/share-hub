@@ -22,9 +22,13 @@ export default function HomePage() {
     });
   }, []);
 
+  // "全部" tab excludes resources in the "其他" catch-all category
+  const otherCat = categories.find((c) => c.name === "其他");
   const filtered = activeCategory
     ? resources.filter((r) => r.category === activeCategory)
-    : resources;
+    : otherCat
+      ? resources.filter((r) => r.category !== otherCat.id)
+      : resources;
 
   const catMap = new Map(categories.map((c) => [c.id, c]));
 
