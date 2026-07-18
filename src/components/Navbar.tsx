@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     fetch("/api/auth")
       .then((r) => r.json())
       .then((d) => setRole(d.role));
-  }, []);
+  }, [pathname]);
 
   async function logout() {
     await fetch("/api/auth", { method: "DELETE" });
