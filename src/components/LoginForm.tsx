@@ -45,7 +45,7 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2.5 rounded-lg border border-zinc-300 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-100 outline-none transition-all"
-          placeholder="管理员或编辑者密码"
+          placeholder="输入密码"
           autoFocus
         />
       </div>
