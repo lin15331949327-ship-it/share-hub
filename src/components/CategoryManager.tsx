@@ -13,14 +13,22 @@ export default function CategoryManager({ onUpdate }: Props) {
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState("📌");
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     const res = await fetch("/api/categories");
     setCategories(await res.json());
     setLoading(false);
+  }
+
+  async function persist(id: string, field: string, value: string) {
+    await fetch("/api/categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, [field]: value }),
+    });
+    await load();
+    onUpdate?.();
   }
 
   async function add() {
@@ -32,16 +40,6 @@ export default function CategoryManager({ onUpdate }: Props) {
     });
     setNewName("");
     setNewIcon("📌");
-    await load();
-    onUpdate?.();
-  }
-
-  async function update(id: string, field: string, value: string | number) {
-    await fetch("/api/categories", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, [field]: value }),
-    });
     await load();
     onUpdate?.();
   }
@@ -66,15 +64,21 @@ export default function CategoryManager({ onUpdate }: Props) {
             className="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 bg-white"
           >
             <input
-              value={cat.icon}
-              onChange={(e) => update(cat.id, "icon", e.target.value)}
-              className="w-10 text-center text-lg"
+              defaultValue={cat.icon}
+              onBlur={(e) => {
+                if (e.target.value !== cat.icon) persist(cat.id, "icon", e.target.value);
+              }}
+              className="w-10 text-center text-lg border border-transparent focus:border-zinc-300 rounded outline-none"
               title="图标"
             />
             <input
-              value={cat.name}
-              onChange={(e) => update(cat.id, "name", e.target.value)}
-              className="flex-1 px-3 py-1.5 rounded border border-zinc-200 focus:border-zinc-400 outline-none text-sm"
+              defaultValue={cat.name}
+              onBlur={(e) => {
+                if (e.target.value !== cat.name && e.target.value.trim()) {
+                  persist(cat.id, "name", e.target.value.trim());
+                }
+              }}
+              className="flex-1 px-3 py-1.5 rounded border border-transparent hover:border-zinc-200 focus:border-zinc-400 outline-none text-sm"
             />
             <button
               onClick={() => remove(cat.id, cat.name)}
