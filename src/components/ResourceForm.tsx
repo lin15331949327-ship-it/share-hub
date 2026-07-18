@@ -6,6 +6,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
+import { VideoExtension } from "@/lib/videoExtension";
 import type { Category, Resource } from "@/lib/types";
 
 interface Props {
@@ -32,6 +33,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       LinkExtension.configure({ openOnClick: false }),
       ImageExtension.configure({ allowBase64: false }),
+      VideoExtension,
     ],
     content: resource?.description || "",
     immediatelyRender: false,
