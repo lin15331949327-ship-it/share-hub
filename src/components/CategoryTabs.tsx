@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { Category } from "@/lib/types";
 
 interface Props {
@@ -13,25 +13,42 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const rafRef = useRef<number>(0);
 
-  const checkScroll = useCallback(() => {
+  function checkScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
+    // use requestAnimationFrame to avoid re-render feedback loops
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      const el2 = scrollRef.current;
+      if (!el2) return;
+      const gap = 8; // hysteresis
+      setCanScrollLeft((prev) => {
+        const now = el2.scrollLeft > gap;
+        return prev !== now ? now : prev;
+      });
+      setCanScrollRight((prev) => {
+        const now = el2.scrollLeft + el2.clientWidth < el2.scrollWidth - gap;
+        return prev !== now ? now : prev;
+      });
+    });
+  }
 
   useEffect(() => {
     checkScroll();
     const el = scrollRef.current;
     if (!el) return;
     el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
     return () => {
       el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
+      ro.disconnect();
+      cancelAnimationFrame(rafRef.current);
     };
-  }, [categories, checkScroll]);
+  }, [categories]);
 
   function scroll(dir: "left" | "right") {
     const el = scrollRef.current;
