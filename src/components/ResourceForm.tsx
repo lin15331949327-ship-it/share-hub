@@ -59,7 +59,7 @@ export default function ResourceForm({ categories, resource }: Props) {
 
       if (file.size <= 50 * 1024 * 1024) {
         setProgress({ current: 1, total: 1 });
-        const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
+        const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}&ct=${encodeURIComponent(file.type)}`, {
           method: "POST", body: file,
         });
         if (!res.ok) throw new Error("上传失败");
@@ -67,7 +67,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       } else {
         const totalParts = Math.ceil(file.size / CHUNK_SIZE);
 
-        const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}`, { method: "POST" });
+        const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}&ct=${encodeURIComponent(file.type)}`, { method: "POST" });
         if (!startRes.ok) throw new Error("创建分片上传失败");
         const { uploadId, key } = await startRes.json();
 

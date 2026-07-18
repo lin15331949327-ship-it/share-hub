@@ -1,8 +1,10 @@
 import Link from "next/link";
+import StorageBar from "@/components/StorageBar";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
+      <StorageBar />
       <div className="flex gap-6 mb-8 border-b border-zinc-200 pb-3">
         <Link
           href="/admin/resources"
