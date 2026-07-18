@@ -23,6 +23,7 @@ export default function ResourceForm({ categories, resource }: Props) {
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -35,6 +36,14 @@ export default function ResourceForm({ categories, resource }: Props) {
   });
 
   async function uploadImage(file: File) {
+    await uploadAndInsert(file, "image");
+  }
+
+  async function uploadVideoFile(file: File) {
+    await uploadAndInsert(file, "video");
+  }
+
+  async function uploadAndInsert(file: File, type: "image" | "video") {
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -42,7 +51,16 @@ export default function ResourceForm({ categories, resource }: Props) {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (res.ok) {
         const { url } = await res.json();
-        editor?.chain().focus().setImage({ src: url }).run();
+        if (type === "image") {
+          editor?.chain().focus().setImage({ src: url }).run();
+        } else {
+          const ext = file.name.split(".").pop()?.toLowerCase() || "";
+          const mime = file.type;
+          const poster = "";
+          editor?.chain().focus().insertContent(
+            `<video src="${url}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${url}">点此下载</a></p></video>`
+          ).run();
+        }
       } else {
         const d = await res.json();
         alert(d.error || "上传失败");
@@ -221,15 +239,24 @@ export default function ResourceForm({ categories, resource }: Props) {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
-              title="上传图片"
+              title="上传图片（最大 4.5MB）"
             >
               {uploading ? "⏳" : "🖼️"}
             </button>
             <button
               type="button"
+              onClick={() => videoInputRef.current?.click()}
+              disabled={uploading}
+              className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
+              title="上传视频（最大 4.5MB）"
+            >
+              📹
+            </button>
+            <button
+              type="button"
               onClick={insertVideo}
               className="px-2 py-1 text-sm rounded hover:bg-zinc-200"
-              title="插入视频"
+              title="嵌入视频链接（B站/YouTube/MP4）"
             >
               🎬
             </button>
@@ -241,6 +268,17 @@ export default function ResourceForm({ categories, resource }: Props) {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) uploadImage(file);
+                e.target.value = "";
+              }}
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/ogg"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadVideoFile(file);
                 e.target.value = "";
               }}
             />

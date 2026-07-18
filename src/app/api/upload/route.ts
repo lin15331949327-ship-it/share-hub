@@ -15,9 +15,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No file" }, { status: 400 });
   }
 
-  // Limit to 10MB
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+  // Vercel free tier server upload: 4.5MB max
+  const MAX_SIZE = 4.5 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: "文件太大，服务器上传最大 4.5MB。大视频请传 123云盘后贴链接。" }, { status: 400 });
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
