@@ -51,36 +51,25 @@ export default function ResourceForm({ categories, resource }: Props) {
   async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
     try {
-      // 1. Get presigned upload URL from server
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
-      });
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || "获取上传链接失败");
+        throw new Error(d.error || "上传失败");
       }
-      const { uploadUrl, fileUrl } = await res.json();
+      const { url } = await res.json();
 
-      // 2. Upload directly to R2 (no custom headers — let browser handle it)
-      const putRes = await fetch(uploadUrl, { method: "PUT", body: file });
-      if (!putRes.ok) {
-        const errText = await putRes.text();
-        throw new Error(`上传失败(${putRes.status}): ${errText.slice(0, 100)}`);
-      }
-
-      // 3. Insert into editor
       if (type === "image") {
-        editor?.chain().focus().setImage({ src: fileUrl }).run();
+        editor?.chain().focus().setImage({ src: url }).run();
       } else if (type === "video") {
         editor?.chain().focus().insertContent(
-          `<video src="${fileUrl}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${fileUrl}">点此下载</a></p></video>`
+          `<video src="${url}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${url}">点此下载</a></p></video>`
         ).run();
       } else {
         const sizeMb = (file.size / 1024 / 1024).toFixed(1);
         editor?.chain().focus().insertContent(
-          `<p><a href="${fileUrl}" download style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f4f4f5;border-radius:8px;color:#18181b;text-decoration:none;font-weight:500">📦 ${file.name} （${sizeMb} MB） — 点击下载</a></p>`
+          `<p><a href="${url}" download style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f4f4f5;border-radius:8px;color:#18181b;text-decoration:none;font-weight:500">📦 ${file.name} （${sizeMb} MB） — 点击下载</a></p>`
         ).run();
       }
     } catch (e: any) {
