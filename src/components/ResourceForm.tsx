@@ -48,16 +48,16 @@ export default function ResourceForm({ categories, resource }: Props) {
     await uploadAndInsert(file, "file");
   }
 
+  const UPLOAD_WORKER = "https://share-hub-upload.lin15331949327.workers.dev";
+
   async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || "上传失败");
-      }
+      const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: "POST",
+        body: file,
+      });
+      if (!res.ok) throw new Error("上传失败");
       const { url } = await res.json();
 
       if (type === "image") {
