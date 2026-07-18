@@ -36,6 +36,20 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
     });
   }
 
+  // scroll the active pill into view on mount & when active changes
+  useEffect(() => {
+    if (!active) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    // find the active button and scroll it to center
+    const btn = el.querySelector(`[data-cat="${active}"]`) as HTMLElement | null;
+    if (btn) {
+      const containerCenter = el.clientWidth / 2;
+      const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
+      el.scrollTo({ left: btnCenter - containerCenter, behavior: "instant" as ScrollBehavior });
+    }
+  }, [active]);
+
   useEffect(() => {
     checkScroll();
     const el = scrollRef.current;
@@ -59,6 +73,7 @@ export default function CategoryTabs({ categories, active, onSelect }: Props) {
   const pill = (id: string | null, label: string) => (
     <button
       key={id ?? "__all__"}
+      data-cat={id ?? "__all__"}
       onClick={() => onSelect(id)}
       className={`shrink-0 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
         active === id

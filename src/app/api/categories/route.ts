@@ -13,6 +13,7 @@ function adminGuard(session: Awaited<ReturnType<typeof getSession>>) {
 // GET /api/categories
 export async function GET() {
   const cats = await getAllCategories();
+  cats.sort((a, b) => a.order - b.order);
   return NextResponse.json(cats);
 }
 
