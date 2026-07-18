@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
+import ImageExtension from "@tiptap/extension-image";
 import type { Category, Resource } from "@/lib/types";
 
 interface Props {
@@ -20,15 +21,58 @@ export default function ResourceForm({ categories, resource }: Props) {
   const [tags, setTags] = useState(resource?.tags?.join(", ") || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       LinkExtension.configure({ openOnClick: false }),
+      ImageExtension.configure({ allowBase64: false }),
     ],
     content: resource?.description || "",
     immediatelyRender: false,
   });
+
+  async function uploadImage(file: File) {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const { url } = await res.json();
+        editor?.chain().focus().setImage({ src: url }).run();
+      } else {
+        const d = await res.json();
+        alert(d.error || "上传失败");
+      }
+    } catch {
+      alert("上传失败，请检查网络");
+    }
+    setUploading(false);
+  }
+
+  function insertVideo() {
+    const videoUrl = window.prompt("粘贴视频链接（支持 B站 / YouTube / 直链 MP4）：");
+    if (!videoUrl) return;
+
+    let embedHtml = "";
+    const biliMatch = videoUrl.match(/bilibili\.com\/video\/(BV\w+)/);
+    const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+
+    if (biliMatch) {
+      embedHtml = `<iframe src="https://player.bilibili.com/player.html?bvid=${biliMatch[1]}" style="width:100%;aspect-ratio:16/9;border:none;border-radius:8px" allowfullscreen></iframe>`;
+    } else if (ytMatch) {
+      embedHtml = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="width:100%;aspect-ratio:16/9;border:none;border-radius:8px" allowfullscreen></iframe>`;
+    } else if (/\.mp4$/i.test(videoUrl)) {
+      embedHtml = `<video src="${videoUrl}" controls style="width:100%;max-width:100%;border-radius:8px"></video>`;
+    } else {
+      embedHtml = `<p><a href="${videoUrl}">📺 查看视频</a></p>`;
+    }
+
+    editor?.chain().focus().insertContent(embedHtml).run();
+  }
 
   useEffect(() => {
     if (!category && categories.length > 0) {
@@ -132,7 +176,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       <div>
         <label className="block text-sm font-medium text-zinc-700 mb-1.5">描述</label>
         <div className="border border-zinc-300 rounded-lg overflow-hidden focus-within:border-zinc-900 focus-within:ring-2 focus-within:ring-zinc-100 transition-all">
-          <div className="flex gap-1 p-2 border-b border-zinc-200 bg-zinc-50">
+          <div className="flex gap-1 p-2 border-b border-zinc-200 bg-zinc-50 flex-wrap">
             <button
               type="button"
               onClick={() => editor?.chain().focus().toggleBold().run()}
@@ -171,6 +215,35 @@ export default function ResourceForm({ categories, resource }: Props) {
             >
               🔗
             </button>
+            <span className="w-px bg-zinc-300 mx-0.5" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
+              title="上传图片"
+            >
+              {uploading ? "⏳" : "🖼️"}
+            </button>
+            <button
+              type="button"
+              onClick={insertVideo}
+              className="px-2 py-1 text-sm rounded hover:bg-zinc-200"
+              title="插入视频"
+            >
+              🎬
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadImage(file);
+                e.target.value = "";
+              }}
+            />
           </div>
           <EditorContent
             editor={editor}

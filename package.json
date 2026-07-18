@@ -9,9 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tiptap/extension-image": "^3.28.0",
     "@tiptap/extension-link": "^3.28.0",
     "@tiptap/react": "^3.28.0",
     "@tiptap/starter-kit": "^3.28.0",
+    "@vercel/blob": "^2.6.1",
     "@vercel/kv": "^2.0.0",
     "jose": "^6.2.3",
     "next": "16.2.10",
