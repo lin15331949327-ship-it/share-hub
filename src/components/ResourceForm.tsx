@@ -63,9 +63,12 @@ export default function ResourceForm({ categories, resource }: Props) {
       }
       const { uploadUrl, fileUrl } = await res.json();
 
-      // 2. Upload directly to R2
-      const putRes = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-      if (!putRes.ok) throw new Error("上传到存储失败");
+      // 2. Upload directly to R2 (no custom headers — let browser handle it)
+      const putRes = await fetch(uploadUrl, { method: "PUT", body: file });
+      if (!putRes.ok) {
+        const errText = await putRes.text();
+        throw new Error(`上传失败(${putRes.status}): ${errText.slice(0, 100)}`);
+      }
 
       // 3. Insert into editor
       if (type === "image") {
