@@ -6,6 +6,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
+import { upload } from "@vercel/blob/client";
 import type { Category, Resource } from "@/lib/types";
 
 interface Props {
@@ -24,6 +25,7 @@ export default function ResourceForm({ categories, resource }: Props) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const packageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -43,30 +45,32 @@ export default function ResourceForm({ categories, resource }: Props) {
     await uploadAndInsert(file, "video");
   }
 
-  async function uploadAndInsert(file: File, type: "image" | "video") {
+  async function uploadPackage(file: File) {
+    await uploadAndInsert(file, "file");
+  }
+
+  async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (res.ok) {
-        const { url } = await res.json();
-        if (type === "image") {
-          editor?.chain().focus().setImage({ src: url }).run();
-        } else {
-          const ext = file.name.split(".").pop()?.toLowerCase() || "";
-          const mime = file.type;
-          const poster = "";
-          editor?.chain().focus().insertContent(
-            `<video src="${url}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${url}">点此下载</a></p></video>`
-          ).run();
-        }
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        multipart: file.size > 50 * 1024 * 1024, // multipart for files > 50MB
+      });
+      if (type === "image") {
+        editor?.chain().focus().setImage({ src: blob.url }).run();
+      } else if (type === "video") {
+        editor?.chain().focus().insertContent(
+          `<video src="${blob.url}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${blob.url}">点此下载</a></p></video>`
+        ).run();
       } else {
-        const d = await res.json();
-        alert(d.error || "上传失败");
+        const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+        editor?.chain().focus().insertContent(
+          `<p><a href="${blob.url}" download style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f4f4f5;border-radius:8px;color:#18181b;text-decoration:none;font-weight:500">📦 ${file.name} （${sizeMb} MB） — 点击下载</a></p>`
+        ).run();
       }
-    } catch {
-      alert("上传失败，请检查网络");
+    } catch (e: any) {
+      alert(e.message || "上传失败");
     }
     setUploading(false);
   }
@@ -248,9 +252,18 @@ export default function ResourceForm({ categories, resource }: Props) {
               onClick={() => videoInputRef.current?.click()}
               disabled={uploading}
               className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
-              title="上传视频（最大 4.5MB）"
+              title="上传视频（最大 500MB）"
             >
               📹
+            </button>
+            <button
+              type="button"
+              onClick={() => packageInputRef.current?.click()}
+              disabled={uploading}
+              className="px-2 py-1 text-sm rounded hover:bg-zinc-200 disabled:opacity-50"
+              title="上传安装包/文件（最大 500MB）"
+            >
+              📦
             </button>
             <button
               type="button"
@@ -279,6 +292,17 @@ export default function ResourceForm({ categories, resource }: Props) {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) uploadVideoFile(file);
+                e.target.value = "";
+              }}
+            />
+            <input
+              ref={packageInputRef}
+              type="file"
+              accept=".exe,.msi,.zip,.rar,.7z,.dmg,.apk,.iso,.tar.gz,.tgz"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadPackage(file);
                 e.target.value = "";
               }}
             />

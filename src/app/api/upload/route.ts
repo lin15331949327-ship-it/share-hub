@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
+import { handleUpload } from "@vercel/blob/client";
 import { getSession } from "@/lib/auth";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -8,26 +8,33 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Login required" }, { status: 401 });
   }
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
+  try {
+    const json = await req.json();
 
-  if (!file) {
-    return NextResponse.json({ error: "No file" }, { status: 400 });
+    // Build token payload for client-side upload
+    return NextResponse.json(
+      await handleUpload({
+        body: json,
+        request: req,
+        onBeforeGenerateToken: async (pathname) => {
+          return {
+            allowedContentTypes: [
+              "image/jpeg", "image/png", "image/webp", "image/gif",
+              "video/mp4", "video/webm", "video/ogg",
+              "application/zip", "application/x-rar-compressed",
+              "application/x-7z-compressed", "application/x-msdownload",
+              "application/octet-stream",
+            ],
+            maximumSizeInBytes: 500 * 1024 * 1024, // 500MB
+            tokenPayload: JSON.stringify({ uploader: session.role }),
+          };
+        },
+        onUploadCompleted: async ({ blob }) => {
+          console.log(`[upload] ${session.role} uploaded: ${blob.url}`);
+        },
+      })
+    );
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || "Upload failed" }, { status: 400 });
   }
-
-  // Vercel free tier server upload: 4.5MB max
-  const MAX_SIZE = 4.5 * 1024 * 1024;
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "文件太大，服务器上传最大 4.5MB。大视频请传 123云盘后贴链接。" }, { status: 400 });
-  }
-
-  const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-  const filename = `${crypto.randomUUID()}.${ext}`;
-
-  const blob = await put(filename, file, {
-    access: "public",
-    contentType: file.type,
-  });
-
-  return NextResponse.json({ url: blob.url });
 }
