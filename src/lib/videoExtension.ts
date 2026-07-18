@@ -10,9 +10,8 @@ function guessType(src: string) {
 export const VideoExtension = Node.create({
   name: "video",
   group: "block",
-  selectable: true,
-  draggable: true,
-  atom: true,
+  selectable: false,
+  draggable: false,
 
   parseHTML() {
     return [{ tag: "video" }];
