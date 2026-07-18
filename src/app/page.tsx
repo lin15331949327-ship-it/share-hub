@@ -30,6 +30,16 @@ export default function HomePage() {
       ? resources.filter((r) => r.category !== otherCat.id)
       : resources;
 
+  // push "游戏" category to the end in "全部" view
+  const gameCat = categories.find((c) => c.name === "游戏");
+  const sorted = gameCat
+    ? [...filtered].sort((a, b) => {
+        const aGame = a.category === gameCat.id ? 1 : 0;
+        const bGame = b.category === gameCat.id ? 1 : 0;
+        return aGame - bGame;
+      })
+    : filtered;
+
   const catMap = new Map(categories.map((c) => [c.id, c]));
 
   if (loading) {
@@ -54,7 +64,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {filtered.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
           <p className="text-5xl mb-4">📭</p>
           <p className="text-lg">还没有资源</p>
@@ -62,7 +72,7 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((r) => (
+          {sorted.map((r) => (
             <ResourceCard key={r.id} resource={r} category={catMap.get(r.category)} />
           ))}
         </div>
