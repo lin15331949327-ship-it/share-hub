@@ -15,7 +15,7 @@ export default function ResourceCard({ resource, category, index = 0 }: Props) {
   return (
     <Link
       href={`/resource/${resource.id}`}
-      className="block p-5 rounded-[var(--radius-lg)] border transition-all duration-[var(--dur-normal)] animate-card-in"
+      className="block p-6 rounded-[var(--radius-lg)] border transition-all duration-[var(--dur-normal)] animate-card-in"
       style={{
         background: "var(--color-surface)",
         backdropFilter: "blur(12px)",
