@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import CategoryTabs from "@/components/CategoryTabs";
 import ResourceCard from "@/components/ResourceCard";
+import { filterForDisplay, sortForDisplay, catMap } from "@/lib/resources";
 import type { Resource, Category } from "@/lib/types";
 
 export default function HomePage() {
@@ -22,25 +23,9 @@ export default function HomePage() {
     });
   }, []);
 
-  // "全部" tab excludes resources in the "其他" catch-all category
-  const otherCat = categories.find((c) => c.name === "其他");
-  const filtered = activeCategory
-    ? resources.filter((r) => r.category === activeCategory)
-    : otherCat
-      ? resources.filter((r) => r.category !== otherCat.id)
-      : resources;
-
-  // push "游戏" category to the end in "全部" view
-  const gameCat = categories.find((c) => c.name === "游戏");
-  const sorted = gameCat
-    ? [...filtered].sort((a, b) => {
-        const aGame = a.category === gameCat.id ? 1 : 0;
-        const bGame = b.category === gameCat.id ? 1 : 0;
-        return aGame - bGame;
-      })
-    : filtered;
-
-  const catMap = new Map(categories.map((c) => [c.id, c]));
+  const filtered = filterForDisplay(resources, categories, activeCategory);
+  const sorted = sortForDisplay(filtered, categories);
+  const cMap = catMap(categories);
 
   if (loading) {
     return (
@@ -73,7 +58,7 @@ export default function HomePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sorted.map((r) => (
-            <ResourceCard key={r.id} resource={r} category={catMap.get(r.category)} />
+            <ResourceCard key={r.id} resource={r} category={cMap.get(r.category)} />
           ))}
         </div>
       )}

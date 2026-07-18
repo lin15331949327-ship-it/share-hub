@@ -14,6 +14,10 @@ export interface Category {
   name: string;
   icon: string;
   order: number;
+  /** Exclude from "全部" view — for catch-all / misc categories */
+  isCatchAll?: boolean;
+  /** Sort weight for display ordering (higher = later). Default 0. */
+  sortWeight?: number;
 }
 
 export interface SessionUser {
