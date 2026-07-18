@@ -31,8 +31,6 @@ export async function getPresignedUploadUrl(
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
-    ContentType: contentType,
-    ContentLength: size,
   });
 
   const uploadUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
