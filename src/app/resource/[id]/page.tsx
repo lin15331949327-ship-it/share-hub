@@ -24,7 +24,7 @@ export default async function ResourcePage({
   return (
     <div className="max-w-3xl mx-auto">
       <Link
-        href="/"
+        href={resource.category ? `/?cat=${resource.category}` : "/"}
         className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors mb-6 inline-block"
       >
         ← 返回首页
