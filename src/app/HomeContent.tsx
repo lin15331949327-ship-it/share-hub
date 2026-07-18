@@ -1,34 +1,28 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import CategoryTabs from "@/components/CategoryTabs";
 import ResourceCard from "@/components/ResourceCard";
 import { filterForDisplay, sortForDisplay, catMap } from "@/lib/resources";
 import type { Resource, Category } from "@/lib/types";
 
+function getInitialCategory(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("cat");
+}
+
 export default function HomeContent() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(getInitialCategory);
   const [loading, setLoading] = useState(true);
 
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const activeCategory = searchParams.get("cat"); // null = "全部"
-
-  const handleSelect = useCallback(
-    (id: string | null) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (id) {
-        params.set("cat", id);
-      } else {
-        params.delete("cat");
-      }
-      const qs = params.toString();
-      router.replace(qs ? `/?${qs}` : "/", { scroll: false });
-    },
-    [searchParams, router]
-  );
+  const handleSelect = useCallback((id: string | null) => {
+    setActiveCategory(id);
+    // sync URL without triggering Next.js navigation (avoids remount)
+    const url = id ? `/?cat=${id}` : "/";
+    window.history.replaceState(null, "", url);
+  }, []);
 
   useEffect(() => {
     Promise.all([
