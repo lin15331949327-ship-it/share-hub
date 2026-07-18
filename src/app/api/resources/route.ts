@@ -8,6 +8,13 @@ export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get("category");
   const all = await getAllResources();
   const filtered = category ? all.filter((r) => r.category === category) : all;
+  // stable sort: by category id then by createdAt descending
+  filtered.sort((a, b) => {
+    const catA = a.category || "";
+    const catB = b.category || "";
+    if (catA !== catB) return catA.localeCompare(catB);
+    return b.createdAt - a.createdAt;
+  });
   return NextResponse.json(filtered);
 }
 
