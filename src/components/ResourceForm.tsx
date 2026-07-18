@@ -49,18 +49,52 @@ export default function ResourceForm({ categories, resource }: Props) {
   }
 
   const UPLOAD_WORKER = "https://share-hub-upload.lin15331949327.workers.dev";
+  const CHUNK_SIZE = 25 * 1024 * 1024; // 25MB per chunk
 
   async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
     try {
-      if (file.size > 100 * 1024 * 1024) {
-        throw new Error("文件超过 100MB，请传到 123云盘后在描述里贴分享链接");
+      let url: string;
+
+      if (file.size <= 50 * 1024 * 1024) {
+        // Simple upload for files ≤ 50MB
+        const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: "POST", body: file,
+        });
+        if (!res.ok) throw new Error("上传失败");
+        ({ url } = await res.json());
+      } else {
+        // Multipart upload for files > 50MB
+        const totalParts = Math.ceil(file.size / CHUNK_SIZE);
+
+        // Start multipart
+        const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}`, { method: "POST" });
+        if (!startRes.ok) throw new Error("创建分片上传失败");
+        const { uploadId, key } = await startRes.json();
+
+        // Upload parts
+        const parts: { etag: string; partNumber: number }[] = [];
+        for (let i = 0; i < totalParts; i++) {
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, file.size);
+          const chunk = file.slice(start, end);
+          const partRes = await fetch(
+            `${UPLOAD_WORKER}/mp/part?key=${encodeURIComponent(key)}&uploadId=${uploadId}&part=${i + 1}`,
+            { method: "POST", body: chunk }
+          );
+          if (!partRes.ok) throw new Error(`分片 ${i + 1}/${totalParts} 上传失败`);
+          const { etag } = await partRes.json();
+          parts.push({ etag, partNumber: i + 1 });
+        }
+
+        // Complete
+        const doneRes = await fetch(
+          `${UPLOAD_WORKER}/mp/complete?key=${encodeURIComponent(key)}&uploadId=${uploadId}`,
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ parts }) }
+        );
+        if (!doneRes.ok) throw new Error("分片组装失败");
+        ({ url } = await doneRes.json());
       }
-      const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
-        method: "POST", body: file,
-      });
-      if (!res.ok) throw new Error("上传失败，请检查网络");
-      const { url } = await res.json();
 
       if (type === "image") {
         editor?.chain().focus().setImage({ src: url }).run();
