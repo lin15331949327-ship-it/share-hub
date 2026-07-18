@@ -6,7 +6,6 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
-import { upload } from "@vercel/blob/client";
 import type { Category, Resource } from "@/lib/types";
 
 interface Props {
@@ -52,21 +51,33 @@ export default function ResourceForm({ categories, resource }: Props) {
   async function uploadAndInsert(file: File, type: "image" | "video" | "file") {
     setUploading(true);
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
-        multipart: file.size > 50 * 1024 * 1024, // multipart for files > 50MB
+      // 1. Get presigned upload URL from server
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
       });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || "获取上传链接失败");
+      }
+      const { uploadUrl, fileUrl } = await res.json();
+
+      // 2. Upload directly to R2
+      const putRes = await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      if (!putRes.ok) throw new Error("上传到存储失败");
+
+      // 3. Insert into editor
       if (type === "image") {
-        editor?.chain().focus().setImage({ src: blob.url }).run();
+        editor?.chain().focus().setImage({ src: fileUrl }).run();
       } else if (type === "video") {
         editor?.chain().focus().insertContent(
-          `<video src="${blob.url}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${blob.url}">点此下载</a></p></video>`
+          `<video src="${fileUrl}" controls preload="metadata" style="width:100%;max-width:100%;border-radius:8px"><p>你的浏览器不支持视频播放，<a href="${fileUrl}">点此下载</a></p></video>`
         ).run();
       } else {
         const sizeMb = (file.size / 1024 / 1024).toFixed(1);
         editor?.chain().focus().insertContent(
-          `<p><a href="${blob.url}" download style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f4f4f5;border-radius:8px;color:#18181b;text-decoration:none;font-weight:500">📦 ${file.name} （${sizeMb} MB） — 点击下载</a></p>`
+          `<p><a href="${fileUrl}" download style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f4f4f5;border-radius:8px;color:#18181b;text-decoration:none;font-weight:500">📦 ${file.name} （${sizeMb} MB） — 点击下载</a></p>`
         ).run();
       }
     } catch (e: any) {

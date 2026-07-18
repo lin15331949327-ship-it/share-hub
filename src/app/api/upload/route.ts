@@ -1,40 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleUpload } from "@vercel/blob/client";
-import { getSession } from "@/lib/auth";
+import { getPresignedUploadUrl } from "@/lib/r2";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Login required" }, { status: 401 });
-  }
-
   try {
-    const json = await req.json();
+    const { filename, contentType, size } = await req.json();
+    if (!filename || !contentType) {
+      return NextResponse.json({ error: "filename and contentType required" }, { status: 400 });
+    }
 
-    // Build token payload for client-side upload
-    return NextResponse.json(
-      await handleUpload({
-        body: json,
-        request: req,
-        onBeforeGenerateToken: async (pathname) => {
-          return {
-            allowedContentTypes: [
-              "image/jpeg", "image/png", "image/webp", "image/gif",
-              "video/mp4", "video/webm", "video/ogg",
-              "application/zip", "application/x-rar-compressed",
-              "application/x-7z-compressed", "application/x-msdownload",
-              "application/octet-stream",
-            ],
-            maximumSizeInBytes: 500 * 1024 * 1024, // 500MB
-            tokenPayload: JSON.stringify({ uploader: session.role }),
-          };
-        },
-        onUploadCompleted: async ({ blob }) => {
-          console.log(`[upload] ${session.role} uploaded: ${blob.url}`);
-        },
-      })
-    );
+    const result = await getPresignedUploadUrl(filename, contentType, size || 0);
+    return NextResponse.json(result);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Upload failed" }, { status: 400 });
+    if (err.message === "Login required") {
+      return NextResponse.json({ error: "Login required" }, { status: 401 });
+    }
+    return NextResponse.json({ error: err.message || "Upload failed" }, { status: 500 });
   }
 }
