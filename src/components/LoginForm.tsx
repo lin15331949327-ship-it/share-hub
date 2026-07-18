@@ -19,9 +19,7 @@ export default function LoginForm() {
     });
 
     if (res.ok) {
-      const data = await res.json();
-      window.location.href =
-        data.role === "admin" ? "/admin/resources" : "/admin/resources/new";
+      window.location.href = "/";
       return;
     } else {
       setError("密码不对，再试试~");
