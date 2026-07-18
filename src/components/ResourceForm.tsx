@@ -22,6 +22,7 @@ export default function ResourceForm({ categories, resource }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const packageInputRef = useRef<HTMLInputElement>(null);
@@ -57,27 +58,25 @@ export default function ResourceForm({ categories, resource }: Props) {
       let url: string;
 
       if (file.size <= 50 * 1024 * 1024) {
-        // Simple upload for files ≤ 50MB
+        setProgress({ current: 1, total: 1 });
         const res = await fetch(`${UPLOAD_WORKER}/upload?filename=${encodeURIComponent(file.name)}`, {
           method: "POST", body: file,
         });
         if (!res.ok) throw new Error("上传失败");
         ({ url } = await res.json());
       } else {
-        // Multipart upload for files > 50MB
         const totalParts = Math.ceil(file.size / CHUNK_SIZE);
 
-        // Start multipart
         const startRes = await fetch(`${UPLOAD_WORKER}/mp/start?filename=${encodeURIComponent(file.name)}`, { method: "POST" });
         if (!startRes.ok) throw new Error("创建分片上传失败");
         const { uploadId, key } = await startRes.json();
 
-        // Upload parts
         const parts: { etag: string; partNumber: number }[] = [];
         for (let i = 0; i < totalParts; i++) {
           const start = i * CHUNK_SIZE;
           const end = Math.min(start + CHUNK_SIZE, file.size);
           const chunk = file.slice(start, end);
+          setProgress({ current: i + 1, total: totalParts + 1 });
           const partRes = await fetch(
             `${UPLOAD_WORKER}/mp/part?key=${encodeURIComponent(key)}&uploadId=${uploadId}&part=${i + 1}`,
             { method: "POST", body: chunk }
@@ -87,7 +86,7 @@ export default function ResourceForm({ categories, resource }: Props) {
           parts.push({ etag, partNumber: i + 1 });
         }
 
-        // Complete
+        setProgress({ current: totalParts + 1, total: totalParts + 1 });
         const doneRes = await fetch(
           `${UPLOAD_WORKER}/mp/complete?key=${encodeURIComponent(key)}&uploadId=${uploadId}`,
           { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ parts }) }
@@ -112,6 +111,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       alert(e.message || "上传失败");
     }
     setUploading(false);
+    setProgress({ current: 0, total: 0 });
   }
 
   function insertVideo() {
@@ -184,6 +184,31 @@ export default function ResourceForm({ categories, resource }: Props) {
     <form onSubmit={submit} className="max-w-2xl space-y-5">
       {error && (
         <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>
+      )}
+
+      {uploading && progress.total > 0 && (
+        <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg animate-bounce">
+              {progress.current === progress.total ? "✨" :
+               progress.total === 1 ? "📤" :
+               progress.current === 1 ? "🚀" :
+               progress.current / progress.total < 0.5 ? "📦" :
+               progress.current / progress.total < 0.9 ? "⚡" : "🔧"}
+            </span>
+            <span className="text-sm font-medium text-zinc-700">
+              {progress.total === 1 ? "上传中..." :
+               progress.current === progress.total ? "正在拼合文件..." :
+               `分片上传中 ${progress.current}/${progress.total - 1}`}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-zinc-200 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300"
+              style={{ width: `${progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0}%` }}
+            />
+          </div>
+        </div>
       )}
 
       <div>

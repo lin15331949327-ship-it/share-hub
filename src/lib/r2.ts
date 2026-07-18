@@ -1,6 +1,7 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const BUCKET = process.env.R2_BUCKET;
+const PUBLIC_PREFIX = process.env.R2_PUBLIC_URL + "/";
 
 const s3 = new S3Client({
   region: "auto",
@@ -30,5 +31,25 @@ export async function uploadToR2(
     })
   );
 
-  return `${process.env.R2_PUBLIC_URL}/${key}`;
+  return PUBLIC_PREFIX + key;
+}
+
+/** Extract R2 keys from resource description HTML, then delete them */
+export async function deleteR2Files(html: string): Promise<void> {
+  if (!BUCKET || !PUBLIC_PREFIX) return;
+
+  const re = new RegExp(PUBLIC_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^\"'\\s<>]+)", "g");
+  const keys: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    keys.push(m[1]);
+  }
+
+  for (const key of keys) {
+    try {
+      await s3.send(new DeleteObjectCommand({ Bucket: BUCKET!, Key: key }));
+    } catch {
+      // ignore per-file errors
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResource, updateResource, deleteResource } from "@/lib/kv";
 import { getSession } from "@/lib/auth";
+import { deleteR2Files } from "@/lib/r2";
 
 // GET /api/resources/[id]
 export async function GET(
@@ -61,6 +62,11 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  const resource = await getResource(id);
+  if (resource) {
+    // Delete R2 files referenced in description
+    await deleteR2Files(resource.description);
+  }
   await deleteResource(id);
   return NextResponse.json({ ok: true });
 }
