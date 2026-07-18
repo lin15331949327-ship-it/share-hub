@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,12 +20,9 @@ export default function LoginForm() {
 
     if (res.ok) {
       const data = await res.json();
-      if (data.role === "admin") {
-        router.push("/admin/resources");
-      } else {
-        router.push("/admin/resources/new");
-      }
-      router.refresh();
+      // Force full reload so cookie is picked up by AuthGuard
+      window.location.href = data.role === "admin" ? "/admin/resources" : "/admin/resources/new";
+      return;
     } else {
       setError("密码错误");
     }
