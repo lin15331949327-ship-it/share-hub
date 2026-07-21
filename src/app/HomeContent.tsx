@@ -409,12 +409,17 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
             </div>
           </div>
 
-          {/* Description — always 2 lines */}
+          {/* Description — 2 independent lines, each truncated */}
           <div className="flex-1 mb-3">
             {desc ? (
-              <p className="line-clamp-2 leading-relaxed" style={{ fontSize: "var(--text-sm)", color: "var(--color-text-soft)" }}>
-                {desc}
-              </p>
+              <div className="space-y-1">
+                <p className="truncate leading-relaxed" style={{ fontSize: "var(--text-sm)", color: "var(--color-text-soft)" }}>
+                  {descLines(desc, 0)}
+                </p>
+                <p className="truncate leading-relaxed" style={{ fontSize: "var(--text-sm)", color: "var(--color-text-soft)" }}>
+                  {descLines(desc, 1)}
+                </p>
+              </div>
             ) : (
               <div className="space-y-1.5">
                 <div className="h-3 w-full rounded" style={{ background: "var(--color-paper-2)" }} />
@@ -463,4 +468,14 @@ function Empty({ message, hint }: { message: string; hint: string }) {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").slice(0, 200);
+}
+
+/** Split HTML description into lines (by <p> / <br>), return line N or empty */
+function descLines(html: string, n: number): string {
+  const text = html
+    .replace(/<\/(p|h[1-6]|li|div)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]*>/g, "");
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines[n] || "";
 }
