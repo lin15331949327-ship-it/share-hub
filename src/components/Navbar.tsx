@@ -22,24 +22,59 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-zinc-200">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-zinc-900">
-          📦 ShareHub
+    <header
+      className="sticky top-0 z-50 border-b"
+      style={{
+        background: "rgba(255,255,255,0.8)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderColor: "var(--color-border)",
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <Link
+          href="/"
+          className="font-semibold tracking-tight"
+          style={{
+            fontSize: "var(--text-base)",
+            color: "var(--color-text)",
+            textDecoration: "none",
+          }}
+        >
+          ShareHub
         </Link>
 
-        <nav className="flex items-center gap-3 text-sm">
+        <nav className="flex items-center gap-4 text-sm">
           {role ? (
             <>
-              <Link href="/admin/resources" className="text-zinc-600 hover:text-zinc-900 transition-colors">
+              <Link
+                href="/admin/resources/new"
+                className="transition-colors"
+                style={{ color: "var(--color-text-soft)" }}
+              >
+                提交资源
+              </Link>
+              <Link
+                href="/admin/resources"
+                className="transition-colors"
+                style={{ color: "var(--color-text-soft)" }}
+              >
                 管理
               </Link>
-              <button onClick={logout} className="text-zinc-400 hover:text-zinc-600 transition-colors">
+              <button
+                onClick={logout}
+                className="transition-colors"
+                style={{ color: "var(--color-text-muted)" }}
+              >
                 退出
               </button>
             </>
           ) : (
-            <Link href="/login" className="text-zinc-500 hover:text-zinc-900 transition-colors">
+            <Link
+              href="/login"
+              className="transition-colors"
+              style={{ color: "var(--color-text-soft)" }}
+            >
               登录
             </Link>
           )}

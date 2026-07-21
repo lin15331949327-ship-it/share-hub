@@ -1,52 +1,47 @@
-/* Hallmark · macrostructure: Auth Card + Resource Grid · tone: warm-sophisticated · anchor hue: 65 (amber)
- * theme: Atelier — warm cream paper · amber accent · serif display + system sans body
- * pages: login + home · enrichment: CSS soft-glow (login) + card microinteractions (home)
- * first Hallmark run: 2026-07-18
+/* Hallmark - ShareHub design tokens
+ * theme: Linear/Vercel minimal - white paper, blue accent, clean shadows
+ * accent: blue-600 (#2563EB) - single brand color
  */
 
 :root {
-  /* ---- paper ---- */
-  --color-paper: oklch(97% 0.005 85);
-  --color-paper-2: oklch(93% 0.010 85);
-  --color-paper-3: oklch(87% 0.015 85);
-  --color-surface: oklch(100% 0 0 / 72%);
-  --color-surface-hover: oklch(100% 0 0 / 88%);
+  /* paper */
+  --color-paper: #ffffff;
+  --color-paper-2: #f8fafc;
+  --color-paper-3: #f1f5f9;
 
-  /* ---- accent ---- */
-  --color-accent: oklch(58% 0.16 65);
-  --color-accent-soft: oklch(72% 0.10 65);
-  --color-accent-glow: oklch(58% 0.16 65 / 18%);
+  /* accent - blue only */
+  --color-accent: #2563eb;
+  --color-accent-soft: #3b82f6;
+  --color-accent-glow: rgba(37, 99, 235, 0.08);
+  --color-accent-ring: rgba(37, 99, 235, 0.25);
 
-  /* ---- text ---- */
-  --color-text: oklch(20% 0.008 85);
-  --color-text-soft: oklch(45% 0.015 85);
-  --color-text-muted: oklch(65% 0.010 85);
+  /* text */
+  --color-text: #0f172a;
+  --color-text-soft: #475569;
+  --color-text-muted: #94a3b8;
 
-  /* ---- border & rule ---- */
-  --color-border: oklch(88% 0.010 85);
-  --color-border-focus: oklch(58% 0.16 65 / 60%);
-  --color-ring: oklch(58% 0.16 65 / 50%);
+  /* border */
+  --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e1;
 
-  /* ---- semantic ---- */
-  --color-error: oklch(50% 0.20 25);
-  --color-error-bg: oklch(50% 0.20 25 / 8%);
-  --color-success: oklch(55% 0.18 155);
+  /* surface (cards) */
+  --color-surface: #ffffff;
 
-  /* ---- typography ---- */
-  --font-display: "Georgia", "Times New Roman", "Noto Serif SC", "Source Han Serif SC", serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* typography */
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 
-  /* ---- type scale (4pt modular) ---- */
+  /* type scale */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
-  --text-3xl: 2rem;
-  --text-display: 2.5rem;
+  --text-3xl: 1.875rem;
+  --text-display: 2.25rem;
 
-  /* ---- spacing (4pt scale) ---- */
+  /* spacing (4pt) */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -55,28 +50,23 @@
   --space-2xl: 48px;
   --space-3xl: 64px;
 
-  /* ---- radius ---- */
+  /* radius - unified 16px system */
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* ---- shadow ---- */
-  --shadow-card: 0 1px 2px oklch(20% 0.005 85 / 6%),
-                 0 8px 32px oklch(20% 0.005 85 / 8%);
-  --shadow-card-hover: 0 2px 4px oklch(20% 0.005 85 / 6%),
-                        0 12px 40px oklch(20% 0.005 85 / 12%);
-  --shadow-glow: 0 0 0 3px var(--color-accent-glow);
+  /* shadow - light only, subtle */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 0 3px var(--color-accent-ring);
 
-  /* ---- easing ---- */
+  /* easing */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
-  /* ---- duration ---- */
+  /* duration */
   --dur-fast: 150ms;
-  --dur-normal: 250ms;
-  --dur-slow: 500ms;
-  --dur-entrance: 600ms;
+  --dur-normal: 200ms;
 }
