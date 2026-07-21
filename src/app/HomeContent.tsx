@@ -145,7 +145,7 @@ export default function HomeContent() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 min-w-0 space-y-6 sm:space-y-10">
+      <div className="flex-1 min-w-0 space-y-8 sm:space-y-14">
         {/* Search */}
         <div className="relative">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--color-text-muted)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -397,15 +397,15 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
     <Link href={`/resource/${resource.id}`} className="block group" style={{ textDecoration: "none" }}>
       <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
         style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}>
-        <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all"
-          style={{ background: "#fff", boxShadow: "var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}
+        <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all active:scale-[0.985]"
+          style={{ background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}
           onMouseEnter={(e) => {
             const p = e.currentTarget.parentElement;
-            if (p) { p.style.background = "var(--color-accent-ring)"; p.style.transform = "translateY(-2px)"; p.style.boxShadow = "var(--shadow-card-hover)"; }
+            if (p) { p.style.background = "var(--color-accent-ring)"; p.style.transform = "translateY(-2px)"; p.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-card-hover)"; }
           }}
           onMouseLeave={(e) => {
             const p = e.currentTarget.parentElement;
-            if (p) { p.style.background = "var(--color-border)"; p.style.transform = "translateY(0)"; p.style.boxShadow = "none"; }
+            if (p) { p.style.background = "var(--color-border)"; p.style.transform = "translateY(0)"; p.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)"; }
           }}>
 
           {/* Header: icon + title + subtitle */}
