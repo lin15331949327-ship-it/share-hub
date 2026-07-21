@@ -240,7 +240,7 @@ export default function HomeContent() {
             {/* Recent updates */}
             {recent.length > 0 && (
               <div>
-                <SectionHeading title="最近更新" viewAll />
+                <SectionHeading title="最近更新" />
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {recent.map((r, i) => (
                     <ScrollReveal key={r.id} delay={i * 50}>
