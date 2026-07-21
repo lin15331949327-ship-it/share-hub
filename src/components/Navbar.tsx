@@ -56,8 +56,7 @@ export default function Navbar() {
 
   async function logout() {
     await fetch("/api/auth", { method: "DELETE" });
-    setRole(null);
-    router.push("/");
+    window.location.href = "/";
   }
 
   return (

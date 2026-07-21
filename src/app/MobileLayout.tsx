@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { stripHtml } from "./HomeShared";
 import type { Resource, Category } from "@/lib/types";
 
@@ -53,7 +52,6 @@ export default function MobileLayout({
   sidebarCats, resources, selectCat, featured, recent,
 }: Props) {
   const [tab, setTab] = useState<Tab>("home");
-  const router = useRouter();
 
   /* Body background override */
   useEffect(() => {
@@ -64,7 +62,7 @@ export default function MobileLayout({
 
   async function logout() {
     await fetch("/api/auth", { method: "DELETE" });
-    router.push("/");
+    window.location.href = "/";
   }
 
   const bookmarkList = useMemo(() => display.filter((r) => r.featured), [display]);
