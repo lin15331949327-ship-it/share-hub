@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { stripHtml } from "./HomeShared";
 import type { Resource, Category } from "@/lib/types";
@@ -14,268 +14,556 @@ interface Props {
   sidebarCats: Category[];
   resources: Resource[];
   selectCat: (id: string | null) => void;
+  featured: Resource | undefined;
+  recent: Resource[];
 }
 
-/* ====== Dark tokens ====== */
-const D = {
-  bg:      "#0a0a0c",
-  surface: "#111114",
-  raised:  "#18181b",
-  border:  "rgba(255,255,255,0.07)",
-  accent:  "#3b82f6",
-  aglow:   "rgba(59,130,246,0.13)",
-  text:    "#e4e4e7",
-  soft:    "#a1a1aa",
-  muted:   "#52525b",
+/* ============================== TOKENS ============================== */
+const T = {
+  bg:      "#09090B",
+  surface: "rgba(255,255,255,0.03)",
+  raised:  "rgba(255,255,255,0.06)",
+  border:  "rgba(255,255,255,0.08)",
+  borderHover: "rgba(255,255,255,0.14)",
+  accent:  "#3B82F6",
+  accentSoft: "rgba(59,130,246,0.12)",
+  accentGlow: "rgba(59,130,246,0.20)",
+  purple:  "#8B5CF6",
+  purpleSoft: "rgba(139,92,246,0.10)",
+  text:    "#FAFAFA",
+  soft:    "#A1A1AA",
+  muted:   "#71717A",
 };
 
-type Tab = "home" | "search";
+/* ============================== HELPERS ============================== */
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good Morning";
+  if (h < 17) return "Good Afternoon";
+  if (h < 21) return "Good Evening";
+  return "Good Night";
+}
 
-export default function MobileLayout({ display, search, setSearch, activeCategory, cMap, sidebarCats, resources, selectCat }: Props) {
+type Tab = "home" | "search" | "discover" | "bookmarks" | "profile";
+
+/* ============================== MAIN ============================== */
+export default function MobileLayout({
+  display, search, setSearch, activeCategory, cMap,
+  sidebarCats, resources, selectCat, featured, recent,
+}: Props) {
   const [tab, setTab] = useState<Tab>("home");
+  const [discoverIdx, setDiscoverIdx] = useState(0);
 
-  /* Escape desktop container + override body background */
+  /* Body background override */
   useEffect(() => {
     const prev = document.body.style.background;
-    document.body.style.background = D.bg;
+    document.body.style.background = T.bg;
     return () => { document.body.style.background = prev; };
   }, []);
 
+  /* Random discover pick */
+  const discoverList = useMemo(() => display.filter((r) => r.featured).length > 0
+    ? display.filter((r) => r.featured)
+    : display.slice(0, 3),
+  [display]);
+  useEffect(() => { setDiscoverIdx(Math.floor(Math.random() * discoverList.length)); }, [tab, discoverList.length]);
+
+  const bookmarkList = useMemo(() => display.filter((r) => r.featured), [display]);
+
   return (
-    <div
-      style={{
-        /* break out of <main> px-6 + pt-4 + pb-24 */
-        margin: "-1rem -1.5rem -6rem",
-        width: "calc(100% + 3rem)",
-        background: D.bg,
-        color: D.text,
-        fontFamily: "var(--font-body)",
-        minHeight: "100dvh",
-        paddingBottom: "80px",
-      }}
-    >
-      {/* ── Top bar ── */}
-      <div
-        className="sticky top-0 z-30"
-        style={{
-          background: "rgba(10,10,12,0.88)",
-          backdropFilter: "blur(16px) saturate(180%)",
-          WebkitBackdropFilter: "blur(16px) saturate(180%)",
-          borderBottom: `1px solid ${D.border}`,
-        }}
-      >
-        <div className="px-4 pt-3 pb-2.5">
-          {tab === "search" ? (
+    <div style={{
+      margin: "-1rem -1.5rem -6rem",
+      width: "calc(100% + 3rem)",
+      background: T.bg,
+      color: T.text,
+      fontFamily: "var(--font-body)",
+      minHeight: "100dvh",
+      paddingBottom: "96px",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      <AmbientBackground />
+
+      {/* ═══ HOME TAB ═══ */}
+      {tab === "home" && (
+        <div className="relative z-10">
+          <GreetingHeader />
+          <AISearch value={search} onChange={setSearch} onFocus={() => setTab("search")} />
+          {featured && <FeaturedCard resource={featured} category={cMap.get(featured.category)} />}
+          {recent.length > 0 && <RecentScroll items={recent} cMap={cMap} />}
+          {/* Collections */}
+          {!activeCategory && !search && sidebarCats.map((cat) => {
+            const items = display.filter((r) => r.category === cat.id);
+            if (items.length === 0) return null;
+            return <CollectionStrip key={cat.id} category={cat} items={items} selectCat={selectCat} />;
+          })}
+          <div style={{ height: 16 }} />
+        </div>
+      )}
+
+      {/* ═══ SEARCH TAB ═══ */}
+      {tab === "search" && (
+        <div className="relative z-10">
+          <div className="px-5 pt-4">
             <div className="relative">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                style={{ color: D.muted }}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-              >
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: T.muted }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
                 type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                placeholder="搜索资源…" autoFocus
-                className="w-full h-10 pl-10 pr-4 rounded-xl text-sm outline-none transition-all"
+                placeholder="Ask ShareHub…" autoFocus
+                className="w-full h-12 pl-12 pr-5 rounded-2xl text-[15px] outline-none transition-all"
                 style={{
-                  background: D.raised, border: `1px solid ${D.border}`,
-                  color: D.text, fontFamily: "var(--font-body)",
+                  background: T.surface, border: `1px solid ${T.border}`, color: T.text,
+                  fontFamily: "var(--font-body)",
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = D.accent; e.currentTarget.style.boxShadow = `0 0 0 3px ${D.aglow}`; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = D.border; e.currentTarget.style.boxShadow = "none"; }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.boxShadow = `0 0 0 3px ${T.accentSoft}`; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "none"; }}
               />
             </div>
-          ) : (
-            <h1 className="text-base font-semibold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-              {activeCategory
-                ? `${cMap.get(activeCategory)?.icon || ""} ${cMap.get(activeCategory)?.name || ""}`
-                : "ShareHub"}
-            </h1>
-          )}
-        </div>
-      </div>
-
-      {/* ── Category pills ── */}
-      <div className="px-4 pt-3 pb-1.5 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-2" style={{ minWidth: "max-content" }}>
-          <Pill active={activeCategory === null} onClick={() => selectCat(null)}>
-            全部
-          </Pill>
-          {sidebarCats.map((cat) => {
-            const count = resources.filter((r) => r.category === cat.id).length;
-            if (count === 0) return null;
-            return (
-              <Pill key={cat.id} active={activeCategory === cat.id} onClick={() => selectCat(cat.id)}>
-                {cat.icon} {cat.name}
-              </Pill>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Card feed ── */}
-      <div className="px-4 pt-2 space-y-3">
-        {display.length > 0 ? (
-          display.map((r, i) => (
-            <MobileCard key={r.id} resource={r} category={cMap.get(r.category)} index={i} />
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center py-28" style={{ color: D.muted }}>
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: D.surface, border: `1px solid ${D.border}` }}>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
-            </div>
-            <p className="font-medium" style={{ fontSize: "15px", color: D.soft }}>
-              {search ? "没有匹配的资源" : "空空如也"}
+            <p className="mt-3 text-xs" style={{ color: T.muted, paddingLeft: 4 }}>
+              Search AI tools, websites, tutorials…
             </p>
-            <p className="mt-1 text-sm">{search ? "试试别的关键词" : "登录后就可以添加啦"}</p>
           </div>
-        )}
-      </div>
+          <div className="px-5 pt-4 space-y-2">
+            {display.length > 0 ? display.map((r, i) => (
+              <SearchResult key={r.id} resource={r} category={cMap.get(r.category)} index={i} />
+            )) : (
+              <EmptyState icon="🔍" title="No results" subtitle="Try a different keyword" />
+            )}
+          </div>
+        </div>
+      )}
 
-      {/* ── Bottom tab bar ── */}
-      <div
-        className="fixed bottom-0 inset-x-0 z-30"
-        style={{
-          background: "rgba(10,10,12,0.9)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          borderTop: `1px solid ${D.border}`,
-        }}
-      >
-        <div className="flex items-center justify-around h-16 px-4 max-w-lg mx-auto">
-          <TabBtn active={tab === "home"} onClick={() => { setTab("home"); selectCat(null); }}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />}
-            label="首页" />
-          <TabBtn active={tab === "search"} onClick={() => setTab("search")}
-            icon={<><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.3-4.3" /></>}
-            label="搜索" />
+      {/* ═══ DISCOVER (AI) TAB ═══ */}
+      {tab === "discover" && discoverList.length > 0 && (() => {
+        const pick = discoverList[discoverIdx % discoverList.length];
+        return (
+          <div className="relative z-10 px-5 pt-4">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: T.purple }}>✦ Discover</p>
+                <h2 className="text-xl font-bold mt-1" style={{ fontFamily: "var(--font-display)" }}>AI Pick for You</h2>
+              </div>
+              <button
+                onClick={() => setDiscoverIdx((i) => (i + 1) % discoverList.length)}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
+                style={{ background: T.surface, border: `1px solid ${T.border}` }}
+              >
+                <svg className="w-4 h-4" style={{ color: T.soft }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                </svg>
+              </button>
+            </div>
+            <Link href={`/resource/${pick.id}`} style={{ textDecoration: "none" }}>
+              <div className="rounded-3xl p-6 transition-all active:scale-[0.985]"
+                style={{
+                  background: `linear-gradient(135deg, ${T.accentSoft} 0%, ${T.purpleSoft} 100%)`,
+                  border: `1px solid rgba(139,92,246,0.18)`,
+                  boxShadow: `0 0 60px ${T.purpleSoft}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+                }}>
+                <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold mb-4"
+                  style={{ background: "rgba(139,92,246,0.25)", color: "#C4B5FD" }}>AI Recommended</span>
+                <FaviconLarge link={pick.link} fallback={cMap.get(pick.category)?.icon || "📦"} />
+                <h3 className="text-xl font-bold mt-4 mb-2" style={{ fontFamily: "var(--font-display)" }}>{pick.name}</h3>
+                <p className="text-sm leading-relaxed line-clamp-2" style={{ color: T.soft }}>
+                  {pick.subtitle || (pick.description ? stripHtml(pick.description) : "Check out this resource")}
+                </p>
+                <div className="flex gap-3 mt-5">
+                  <a href={pick.link} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                    style={{ background: "#fff", color: "#09090B" }}>
+                    Open
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                  <Link href={`/resource/${pick.id}`}
+                    className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                    style={{ background: "rgba(255,255,255,0.08)", color: T.text }}>
+                    Details
+                  </Link>
+                </div>
+              </div>
+            </Link>
+          </div>
+        );
+      })()}
+
+      {/* ═══ BOOKMARKS TAB ═══ */}
+      {tab === "bookmarks" && (
+        <div className="relative z-10 px-5 pt-4">
+          <h2 className="text-lg font-bold mb-4" style={{ fontFamily: "var(--font-display)" }}>★ Starred</h2>
+          <div className="space-y-2">
+            {bookmarkList.length > 0 ? bookmarkList.map((r, i) => (
+              <SearchResult key={r.id} resource={r} category={cMap.get(r.category)} index={i} />
+            )) : (
+              <EmptyState icon="★" title="No starred items" subtitle="Star resources to see them here" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ PROFILE TAB ═══ */}
+      {tab === "profile" && (
+        <div className="relative z-10 px-5 pt-4">
+          <div className="flex flex-col items-center py-12">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold mb-4"
+              style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})` }}>
+              S
+            </div>
+            <h2 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)" }}>ShareHub</h2>
+            <p className="text-sm mt-1" style={{ color: T.muted }}>AI-native resource sharing</p>
+            <button
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("view", "desktop");
+                window.location.href = url.toString();
+              }}
+              className="mt-6 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+              style={{ background: T.surface, color: T.soft, border: `1px solid ${T.border}` }}>
+              Switch to Desktop
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ BOTTOM NAV ═══ */}
+      <BottomNav tab={tab} onTab={setTab} />
+    </div>
+  );
+}
+
+/* =========================== SUB-COMPONENTS =========================== */
+
+function AmbientBackground() {
+  return (
+    <>
+      <div className="absolute pointer-events-none" style={{
+        top: "-20%", left: "-30%", width: "500px", height: "500px",
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${T.accentGlow} 0%, rgba(59,130,246,0.03) 40%, transparent 70%)`,
+        filter: "blur(40px)",
+      }} />
+      <div className="absolute pointer-events-none" style={{
+        top: "5%", right: "-25%", width: "360px", height: "360px",
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${T.purpleSoft} 0%, rgba(139,92,246,0.02) 40%, transparent 70%)`,
+        filter: "blur(40px)",
+      }} />
+      <div className="absolute pointer-events-none" style={{
+        bottom: "10%", left: "20%", width: "250px", height: "250px",
+        borderRadius: "50%",
+        background: `radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 60%)`,
+        filter: "blur(60px)",
+      }} />
+    </>
+  );
+}
+
+function GreetingHeader() {
+  return (
+    <div className="flex items-start justify-between px-5 pt-5 pb-1">
+      <div>
+        <p className="text-sm font-medium" style={{ color: T.muted }}>{greeting()},</p>
+        <h1 className="text-2xl font-bold tracking-tight mt-0.5" style={{ fontFamily: "var(--font-display)" }}>
+          ShareHub
+        </h1>
+        <p className="text-[13px] mt-1" style={{ color: T.soft }}>Discover tools with AI.</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+          style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+          <svg className="w-4 h-4" style={{ color: T.soft }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+          </svg>
+        </button>
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
+          style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})` }}>
+          S
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Pill ── */
-function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function AISearch({ value, onChange, onFocus }: { value: string; onChange: (v: string) => void; onFocus: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="shrink-0 px-4 py-2 rounded-full text-[13px] font-medium transition-all select-none active:scale-95"
-      style={{
-        background: active ? D.accent : D.raised,
-        color: active ? "#fff" : D.soft,
-        border: active ? "none" : `1px solid ${D.border}`,
-        transition: "all 200ms cubic-bezier(0.32, 0.72, 0, 1)",
-      }}
-    >
-      {children}
-    </button>
+    <div className="px-5 pt-4 pb-2">
+      <div className="relative">
+        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: T.muted }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text" value={value} onChange={(e) => onChange(e.target.value)}
+          placeholder="Ask ShareHub…"
+          className="w-full h-12 pl-12 pr-5 rounded-2xl text-[15px] outline-none transition-all placeholder:text-zinc-500"
+          style={{
+            background: T.surface, border: `1px solid ${T.border}`, color: T.text,
+            fontFamily: "var(--font-body)",
+          }}
+          onFocus={(e) => { onFocus(); e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.boxShadow = `0 0 0 3px ${T.accentSoft}`; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "none"; }}
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md" style={{ background: T.accentSoft, color: T.accent }}>
+            AI
+          </span>
+        </div>
+      </div>
+      <p className="mt-2 text-xs" style={{ color: T.muted, paddingLeft: 4 }}>
+        Search AI tools, websites, tutorials…
+      </p>
+    </div>
   );
 }
 
-/* ── Tab button ── */
-function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-0.5 transition-all active:scale-95"
-      style={{
-        color: active ? D.accent : D.muted,
-        background: "none", border: "none", cursor: "pointer",
-        transition: "all 200ms cubic-bezier(0.32, 0.72, 0, 1)",
-      }}
-    >
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        {icon}
-      </svg>
-      <span className="text-[11px] font-semibold">{label}</span>
-    </button>
-  );
-}
-
-/* ── Card ── */
-function MobileCard({ resource, category, index }: { resource: Resource; category?: Category; index: number }) {
-  const tags = Array.isArray(resource.tags) ? resource.tags : [];
-  const desc = resource.description ? stripHtml(resource.description) : "";
+function FeaturedCard({ resource, category }: { resource: Resource; category?: Category }) {
+  const desc = resource.subtitle || (resource.description ? stripHtml(resource.description).slice(0, 120) : "");
 
   return (
-    <Link href={`/resource/${resource.id}`} style={{ textDecoration: "none", display: "block" }}>
-      <div
-        className="rounded-2xl transition-all active:scale-[0.985]"
-        style={{
-          background: D.surface,
-          border: `1px solid ${D.border}`,
-          transition: "all 200ms cubic-bezier(0.32, 0.72, 0, 1)",
-          animation: `cardIn 400ms cubic-bezier(0.32, 0.72, 0, 1) ${index * 50}ms both`,
-        }}
-      >
-        {/* Header row */}
-        <div className="flex items-start gap-3 px-4 pt-4 pb-2">
-          <div
-            className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden"
-            style={{ background: D.raised, border: `1px solid ${D.border}` }}
-          >
-            <FaviconPlaceholder link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
-          </div>
-          <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-center gap-1.5">
-              <h3 className="font-semibold truncate" style={{ fontSize: "15px", color: D.text }}>
+    <div className="px-5 pt-2 pb-4">
+      <Link href={`/resource/${resource.id}`} style={{ textDecoration: "none" }}>
+        <div className="rounded-3xl p-5 transition-all active:scale-[0.985] relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.06) 100%)`,
+            border: `1px solid rgba(255,255,255,0.10)`,
+            boxShadow: `0 0 40px rgba(59,130,246,0.06), inset 0 1px 0 rgba(255,255,255,0.04)`,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+          }}>
+          {/* Today's Pick badge */}
+          <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold mb-4"
+            style={{ background: T.accentSoft, color: T.accent }}>
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            Today&apos;s Pick
+          </span>
+
+          <div className="flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold leading-tight mb-1.5" style={{ fontFamily: "var(--font-display)" }}>
                 {resource.name}
-              </h3>
-              {resource.featured && (
-                <span className="shrink-0" style={{ color: D.accent, fontSize: "12px" }}>★</span>
+              </h2>
+              {desc && (
+                <p className="text-sm leading-relaxed line-clamp-2" style={{ color: T.soft }}>{desc}</p>
               )}
+              <div className="flex gap-3 mt-4">
+                <a href={resource.link} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                  style={{ background: "#fff", color: "#09090B" }}
+                  onClick={(e) => e.stopPropagation()}>
+                  Open
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                </a>
+                <Link href={`/resource/${resource.id}`}
+                  className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                  style={{ background: "rgba(255,255,255,0.06)", color: T.text }}
+                  onClick={(e) => e.stopPropagation()}>
+                  AI Summary
+                </Link>
+              </div>
             </div>
-            {resource.subtitle && (
-              <p className="text-[13px] mt-0.5 truncate" style={{ color: D.muted }}>{resource.subtitle}</p>
-            )}
+
+            {/* Floating icon */}
+            <div className="shrink-0 relative">
+              <div className="absolute inset-0 rounded-2xl blur-xl opacity-40"
+                style={{ background: T.accent }} />
+              <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.06)", border: `1px solid rgba(255,255,255,0.12)`, boxShadow: `0 0 30px ${T.accentGlow}` }}>
+                <FaviconLarge link={resource.link} fallback={category?.icon || "📦"} />
+              </div>
+            </div>
           </div>
         </div>
+      </Link>
+    </div>
+  );
+}
 
-        {/* Description */}
-        {desc && (
-          <p className="px-4 pb-3 line-clamp-2 leading-relaxed" style={{ fontSize: "13px", color: D.soft }}>
-            {desc}
-          </p>
-        )}
+function RecentScroll({ items, cMap }: { items: Resource[]; cMap: Map<string, Category> }) {
+  return (
+    <div className="pt-2 pb-4">
+      <div className="flex items-center justify-between px-5 mb-3">
+        <h3 className="text-sm font-semibold tracking-wide uppercase" style={{ color: T.muted }}>Recent</h3>
+      </div>
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5" style={{ scrollSnapType: "x mandatory" }}>
+        {items.map((r) => (
+          <Link key={r.id} href={`/resource/${r.id}`} style={{ textDecoration: "none", scrollSnapAlign: "start" }}>
+            <div className="w-[150px] rounded-2xl p-4 transition-all active:scale-[0.97]"
+              style={{
+                background: T.surface, border: `1px solid ${T.border}`,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
+              }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden mb-3"
+                style={{ background: T.raised }}>
+                <FaviconIcon link={r.link} alt={r.name} fallback={cMap.get(r.category)?.icon || "📦"} />
+              </div>
+              <h4 className="text-sm font-semibold truncate mb-1" style={{ fontFamily: "var(--font-display)" }}>{r.name}</h4>
+              <p className="text-[12px] line-clamp-2 leading-relaxed" style={{ color: T.muted }}>
+                {r.subtitle || (r.description ? stripHtml(r.description).slice(0, 60) : "")}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-        {/* Footer tags */}
-        <div className="flex flex-wrap gap-1.5 items-center px-4 pb-4">
-          {category && (
-            <span
-              className="text-[12px] px-2 py-0.5 rounded-lg font-medium"
-              style={{ background: D.aglow, color: D.accent }}
-            >
-              {category.name}
-            </span>
-          )}
-          {tags.slice(0, 3).map((tag, i) => (
-            <span
-              key={i}
-              className="text-[12px] px-2 py-0.5 rounded-lg"
-              style={{ background: D.raised, color: D.muted }}
-            >
-              {tag}
-            </span>
-          ))}
+function CollectionStrip({ category, items, selectCat }: { category: Category; items: Resource[]; selectCat: (id: string) => void }) {
+  return (
+    <div className="pt-2 pb-3">
+      <div className="flex items-center justify-between px-5 mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{category.icon}</span>
+          <h3 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>{category.name}</h3>
+        </div>
+        <button onClick={() => selectCat(category.id)}
+          className="text-xs font-medium transition-all active:scale-95"
+          style={{ color: T.accent }}>
+          See all →
+        </button>
+      </div>
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5" style={{ scrollSnapType: "x mandatory" }}>
+        {items.slice(0, 6).map((r) => (
+          <Link key={r.id} href={`/resource/${r.id}`} style={{ textDecoration: "none", scrollSnapAlign: "start" }}>
+            <div className="w-[155px] rounded-2xl p-4 transition-all active:scale-[0.97]"
+              style={{
+                background: T.surface, border: `1px solid ${T.border}`,
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
+              }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden mb-3"
+                style={{ background: T.raised }}>
+                <FaviconIcon link={r.link} alt={r.name} fallback={category.icon || "📦"} />
+              </div>
+              <h4 className="text-sm font-semibold truncate mb-1" style={{ fontFamily: "var(--font-display)" }}>{r.name}</h4>
+              <p className="text-[12px] line-clamp-2 leading-relaxed" style={{ color: T.muted }}>
+                {r.subtitle || (r.description ? stripHtml(r.description).slice(0, 60) : "")}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SearchResult({ resource, category, index }: { resource: Resource; category?: Category; index: number }) {
+  return (
+    <Link href={`/resource/${resource.id}`} style={{ textDecoration: "none", display: "block" }}>
+      <div className="rounded-2xl p-4 transition-all active:scale-[0.985]"
+        style={{
+          background: T.surface, border: `1px solid ${T.border}`,
+          animation: `cardIn 350ms cubic-bezier(0.32,0.72,0,1) ${index * 40}ms both`,
+        }}>
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
+            style={{ background: T.raised }}>
+            <FaviconIcon link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-semibold truncate">{resource.name}</h4>
+            {resource.subtitle && <p className="text-[12px] mt-0.5 truncate" style={{ color: T.muted }}>{resource.subtitle}</p>}
+          </div>
+          {resource.featured && <span style={{ color: T.accent, fontSize: "13px" }}>★</span>}
         </div>
       </div>
     </Link>
   );
 }
 
-/* Mini favicon with fallback (inline to avoid flicker) */
-function FaviconPlaceholder({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
-  const [ok, setOk] = useState(true);
-  let hostname = "";
-  try { hostname = new URL(link).hostname; } catch { return <span className="text-lg">{fallback}</span>; }
-  const src = `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`;
-  if (!ok) return <span className="text-lg">{fallback}</span>;
+function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
   return (
-    <img src={src} alt={alt} className="w-6 h-6 object-contain" loading="lazy" onError={() => setOk(false)} />
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+        style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+        <span className="text-2xl">{icon}</span>
+      </div>
+      <p style={{ color: T.soft, fontSize: "15px", fontWeight: 500 }}>{title}</p>
+      <p className="text-sm mt-1" style={{ color: T.muted }}>{subtitle}</p>
+    </div>
   );
 }
 
+/* ═══ BOTTOM NAV ═══ */
+function BottomNav({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => void }) {
+  return (
+    <div className="fixed bottom-0 inset-x-0 z-40 flex justify-center pb-3 px-4 pointer-events-none">
+      <div className="pointer-events-auto flex items-center gap-1 px-2 py-2 rounded-2xl"
+        style={{
+          background: "rgba(18,18,22,0.85)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: `1px solid ${T.border}`,
+          boxShadow: `0 0 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03)`,
+        }}>
+        <NavItem active={tab === "home"} onClick={() => onTab("home")}
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />}
+          label="Home" />
+        <NavItem active={tab === "search"} onClick={() => onTab("search")}
+          icon={<><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.3-4.3" /></>}
+          label="Search" />
+
+        {/* AI Magic Button — prominent center */}
+        <button onClick={() => onTab("discover")}
+          className="flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all active:scale-90 -mt-5 mx-1"
+          style={{
+            background: `linear-gradient(135deg, ${T.accent}, ${T.purple})`,
+            border: `2px solid rgba(255,255,255,0.2)`,
+            boxShadow: `0 0 24px ${T.accentGlow}, 0 4px 16px rgba(59,130,246,0.3)`,
+          }}>
+          <svg className="w-6 h-6" style={{ color: "#fff" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+          </svg>
+        </button>
+
+        <NavItem active={tab === "bookmarks"} onClick={() => onTab("bookmarks")}
+          icon={<path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />}
+          label="Saved" />
+        <NavItem active={tab === "profile"} onClick={() => onTab("profile")}
+          icon={<><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></>}
+          label="Profile" />
+      </div>
+    </div>
+  );
+}
+
+function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+  return (
+    <button onClick={onClick}
+      className="flex flex-col items-center gap-0.5 w-14 py-1 rounded-xl transition-all active:scale-90"
+      style={{ color: active ? T.accent : T.muted, transition: "all 200ms cubic-bezier(0.32,0.72,0,1)" }}>
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        {icon}
+      </svg>
+      <span className="text-[10px] font-semibold">{label}</span>
+    </button>
+  );
+}
+
+/* ═══ FAVICON ═══ */
+function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
+  const [ok, setOk] = useState(true);
+  let hostname = "";
+  try { hostname = new URL(link).hostname; } catch { return <span className="text-base">{fallback}</span>; }
+  if (!ok) return <span className="text-base">{fallback}</span>;
+  return (
+    <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`} alt={alt}
+      className="w-5 h-5 object-contain" loading="lazy" onError={() => setOk(false)} />
+  );
+}
+
+function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
+  const [ok, setOk] = useState(true);
+  let hostname = "";
+  try { hostname = new URL(link).hostname; } catch { return <span className="text-4xl">{fallback}</span>; }
+  if (!ok) return <span className="text-4xl">{fallback}</span>;
+  return (
+    <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=128`} alt=""
+      className="w-12 h-12 object-contain" loading="lazy" onError={() => setOk(false)} />
+  );
+}

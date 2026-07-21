@@ -33,6 +33,8 @@ export default function HomeContent() {
           sidebarCats={data.sidebarCats}
           resources={data.resources}
           selectCat={data.selectCat}
+          featured={data.featured}
+          recent={data.recent}
         />
       ) : (
         <DesktopView data={data} />
