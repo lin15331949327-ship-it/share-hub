@@ -366,7 +366,12 @@ function DraggableToggle({ isMobile }: { isMobile: boolean }) {
   function toggle() {
     if (moved.current) return;
     const url = new URL(window.location.href);
-    url.searchParams.set("view", isMobile ? "desktop" : "mobile");
+    if (isMobile) {
+      url.searchParams.set("view", "desktop");
+    } else {
+      url.searchParams.set("view", "mobile");
+      url.searchParams.delete("cat"); // reset category filter when entering mobile
+    }
     window.location.href = url.toString();
   }
 

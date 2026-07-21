@@ -364,7 +364,7 @@ function RecentScroll({ items, cMap }: { items: Resource[]; cMap: Map<string, Ca
               </div>
               <h4 className="text-sm font-semibold truncate mb-1 shrink-0" style={{ fontFamily: "var(--font-display)" }}>{r.name}</h4>
               <p className="text-[12px] line-clamp-2 leading-relaxed flex-1" style={{ color: T.muted }}>
-                {r.subtitle || (r.description ? stripHtml(r.description).slice(0, 60) : "")}
+                {r.description ? stripHtml(r.description) : ""}
               </p>
             </div>
           </Link>
@@ -391,7 +391,7 @@ function CollectionStrip({ category, items, selectCat }: { category: Category; i
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 scroll-pl-5" style={{ scrollSnapType: "x mandatory" }}>
         {items.slice(0, 4).map((r) => (
           <Link key={r.id} href={`/resource/${r.id}`} style={{ textDecoration: "none", scrollSnapAlign: "start", flexShrink: 0 }}>
-            <div className="w-[134px] h-[110px] rounded-2xl p-3 transition-all active:scale-[0.97] flex flex-col items-center text-center"
+            <div className="w-[150px] h-[110px] rounded-2xl p-3 transition-all active:scale-[0.97] flex flex-col items-center text-center"
               style={{
                 background: T.surface, border: `1px solid ${T.border}`,
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
