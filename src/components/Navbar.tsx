@@ -22,64 +22,66 @@ export default function Navbar() {
   }
 
   return (
-    <header
-      className="sticky top-0 z-50 border-b"
-      style={{
-        background: "rgba(255,255,255,0.8)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderColor: "var(--color-border)",
-      }}
-    >
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <div className="sticky top-4 z-40 flex justify-center px-4">
+      <nav
+        className="flex items-center gap-6 px-6 h-12 rounded-full text-sm"
+        style={{
+          background: "rgba(255,255,255,0.7)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
+          border: "1px solid rgba(0,0,0,0.06)",
+        }}
+      >
         <Link
           href="/"
-          className="font-semibold tracking-tight"
+          className="font-semibold tracking-tight mr-2"
           style={{
-            fontSize: "var(--text-base)",
+            fontSize: "15px",
             color: "var(--color-text)",
             textDecoration: "none",
+            fontFamily: "var(--font-display)",
           }}
         >
           ShareHub
         </Link>
 
-        <nav className="flex items-center gap-4 text-sm">
-          {role ? (
-            <>
-              <Link
-                href="/admin/resources/new"
-                className="transition-colors"
-                style={{ color: "var(--color-text-soft)" }}
-              >
-                提交资源
-              </Link>
-              <Link
-                href="/admin/resources"
-                className="transition-colors"
-                style={{ color: "var(--color-text-soft)" }}
-              >
-                管理
-              </Link>
-              <button
-                onClick={logout}
-                className="transition-colors"
-                style={{ color: "var(--color-text-muted)" }}
-              >
-                退出
-              </button>
-            </>
-          ) : (
+        <span className="w-px h-5" style={{ background: "var(--color-border)" }} />
+
+        {role ? (
+          <>
             <Link
-              href="/login"
+              href="/admin/resources/new"
               className="transition-colors"
-              style={{ color: "var(--color-text-soft)" }}
+              style={{ color: "var(--color-text-soft)", fontSize: "13px", textDecoration: "none" }}
             >
-              登录
+              提交
             </Link>
-          )}
-        </nav>
-      </div>
-    </header>
+            <Link
+              href="/admin/resources"
+              className="transition-colors"
+              style={{ color: "var(--color-text-soft)", fontSize: "13px", textDecoration: "none" }}
+            >
+              管理
+            </Link>
+            <button
+              onClick={logout}
+              className="transition-colors"
+              style={{ color: "var(--color-text-muted)", fontSize: "13px", background: "none", border: "none", cursor: "pointer" }}
+            >
+              退出
+            </button>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className="transition-colors"
+            style={{ color: "var(--color-text-soft)", fontSize: "13px", textDecoration: "none" }}
+          >
+            登录
+          </Link>
+        )}
+      </nav>
+    </div>
   );
 }

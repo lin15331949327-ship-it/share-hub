@@ -1,35 +1,35 @@
-/* Hallmark - ShareHub design tokens
- * theme: Linear/Vercel minimal - white paper, blue accent, clean shadows
- * accent: blue-600 (#2563EB) - single brand color
+/* Hallmark + Vanguard · Soft Structuralism
+ * font: Geist + Geist Mono · palette: white + blue accent · radius: squircle 24px
  */
 
 :root {
   /* paper */
-  --color-paper: #ffffff;
-  --color-paper-2: #f8fafc;
-  --color-paper-3: #f1f5f9;
+  --color-paper: #fafafa;
+  --color-paper-2: #f5f5f5;
+  --color-paper-3: #ebebeb;
 
-  /* accent - blue only */
+  /* accent */
   --color-accent: #2563eb;
   --color-accent-soft: #3b82f6;
-  --color-accent-glow: rgba(37, 99, 235, 0.08);
-  --color-accent-ring: rgba(37, 99, 235, 0.25);
+  --color-accent-glow: rgba(37, 99, 235, 0.06);
+  --color-accent-ring: rgba(37, 99, 235, 0.20);
 
   /* text */
-  --color-text: #0f172a;
-  --color-text-soft: #475569;
-  --color-text-muted: #94a3b8;
+  --color-text: #0a0a0a;
+  --color-text-soft: #525252;
+  --color-text-muted: #a3a3a3;
 
   /* border */
-  --color-border: #e2e8f0;
-  --color-border-hover: #cbd5e1;
+  --color-border: #e5e5e5;
+  --color-border-hover: #d4d4d4;
 
-  /* surface (cards) */
+  /* surface */
   --color-surface: #ffffff;
 
-  /* typography */
-  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* typography — Geist via next/font */
+  --font-display: "Geist", "Geist Fallback", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: "Geist", "Geist Fallback", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
 
   /* type scale */
   --text-xs: 0.75rem;
@@ -38,8 +38,8 @@
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-display: 2.25rem;
+  --text-3xl: 2rem;
+  --text-display: 2.5rem;
 
   /* spacing (4pt) */
   --space-xs: 4px;
@@ -49,24 +49,31 @@
   --space-xl: 32px;
   --space-2xl: 48px;
   --space-3xl: 64px;
+  --space-4xl: 96px;
 
-  /* radius - unified 16px system */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  /* radius — squircle system */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-full: 9999px;
 
-  /* shadow - light only, subtle */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  /* shadow — ultra-soft ambient, no harsh blacks */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.02);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.03), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 2px 6px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.06);
   --shadow-glow: 0 0 0 3px var(--color-accent-ring);
 
-  /* easing */
+  /* easing — spring physics, no linear/ease-in-out */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-snappy: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* duration */
   --dur-fast: 150ms;
-  --dur-normal: 200ms;
+  --dur-normal: 250ms;
+  --dur-slow: 500ms;
+  --dur-reveal: 800ms;
 }
