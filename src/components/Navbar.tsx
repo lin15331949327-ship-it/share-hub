@@ -89,6 +89,11 @@ export default function Navbar() {
           e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)";
         }}
       >
+        {/* Drag handle */}
+        <span className="select-none mr-1" style={{ color: "var(--color-text-muted)", fontSize: "12px", letterSpacing: "2px", lineHeight: 1, cursor: "grab" }}>
+          ⋮⋮
+        </span>
+
         <Link href="/" className="font-semibold tracking-tight mr-2" style={{
           fontSize: "15px", color: "var(--color-text)", textDecoration: "none", fontFamily: "var(--font-display)",
         }} onPointerDown={(e) => e.stopPropagation()}>

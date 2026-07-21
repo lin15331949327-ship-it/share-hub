@@ -255,7 +255,7 @@ export default function HomeContent() {
             {categorySections.map(([catId, items]) => {
               const cat = cMap.get(catId);
               if (!cat || items.length === 0) return null;
-              const shown = items.slice(0, 4);
+              const shown = items.slice(0, 3);
               return (
                 <div key={catId}>
                   <SectionHeading
