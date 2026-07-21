@@ -238,38 +238,31 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
 
 function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
   const favicon = getFaviconUrl(link, 128);
+  const [imgOk, setImgOk] = useState(!!favicon);
+  if (!favicon || !imgOk) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
   return (
-    <>
-      {favicon ? (
-        <img src={favicon} alt="" className="w-20 h-20 object-contain"
-          loading="lazy"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-      ) : null}
-      <span style={{ fontSize: "72px", display: favicon ? "none" : "inline" }}>{fallback}</span>
-    </>
+    <img src={favicon} alt="" className="w-20 h-20 object-contain"
+      loading="lazy" onError={() => setImgOk(false)} />
   );
 }
 
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const favicon = getFaviconUrl(link);
+  const [imgOk, setImgOk] = useState(!!favicon);
   return (
-    <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none relative"
+    <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
       style={{ background: "var(--color-paper-2)", overflow: "hidden" }}>
-      {favicon ? (
+      {favicon && imgOk ? (
         <img
           src={favicon}
           alt={alt}
           className="w-7 h-7 object-contain"
           loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-            (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
-          }}
+          onError={() => setImgOk(false)}
         />
-      ) : null}
-      <span className={`text-xl ${favicon ? "hidden" : ""}`} style={{ position: favicon ? "absolute" : "static", inset: 0, display: favicon ? "flex" : "inline", alignItems: "center", justifyContent: "center" }}>
-        {fallback}
-      </span>
+      ) : (
+        <span className="text-xl">{fallback}</span>
+      )}
     </div>
   );
 }
