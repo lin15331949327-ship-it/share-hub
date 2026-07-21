@@ -540,7 +540,7 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
       <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
         style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}>
         <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all active:scale-[0.985]"
-          style={{ background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}
+          style={{ background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "160px" }}
           onMouseEnter={(e) => {
             const p = e.currentTarget.parentElement;
             if (p) { p.style.background = "var(--color-accent-ring)"; p.style.transform = "translateY(-2px)"; p.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-card-hover)"; }
