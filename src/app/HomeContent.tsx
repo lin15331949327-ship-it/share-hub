@@ -33,7 +33,6 @@ export default function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(getInitialCategory);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -88,7 +87,6 @@ export default function HomeContent() {
 
   function selectCat(id: string | null) {
     setActiveCategory(id);
-    setSidebarOpen(false);
     window.history.replaceState(null, "", id ? `/?cat=${id}` : "/");
   }
 
@@ -105,19 +103,33 @@ export default function HomeContent() {
 
   return (
     <div className="flex gap-8" style={{ paddingTop: "24px" }}>
-      {/* Mobile selector */}
-      <div className="lg:hidden w-full mb-2">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="flex items-center gap-2 w-full px-4 py-3 rounded-[var(--radius-md)] border text-sm font-medium"
-          style={{ background: "#fff", borderColor: "var(--color-border)", color: "var(--color-text)" }}>
-          {activeCategory ? `${cMap.get(activeCategory)?.icon || ""} ${cMap.get(activeCategory)?.name || ""}` : `首页 (${allCount})`}
-          <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-        </button>
-        {sidebarOpen && (
-          <div className="mt-2 rounded-[var(--radius-lg)] border p-2 space-y-1" style={{ background: "#fff", borderColor: "var(--color-border)" }}>
-            <SidebarItems allCount={allCount} activeCategory={activeCategory} sidebarCats={sidebarCats} resources={resources} selectCat={selectCat} />
-          </div>
-        )}
+      {/* Mobile category pills */}
+      <div className="lg:hidden w-full -mx-2 px-2 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 pb-1" style={{ minWidth: "max-content" }}>
+          <button onClick={() => selectCat(null)} className="shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all"
+            style={{
+              background: activeCategory === null ? "var(--color-accent)" : "#fff",
+              color: activeCategory === null ? "#fff" : "var(--color-text-soft)",
+              border: activeCategory === null ? "none" : "1px solid var(--color-border)",
+            }}>
+            首页
+          </button>
+          {sidebarCats.map((cat) => {
+            const count = resources.filter((r) => r.category === cat.id).length;
+            if (count === 0) return null;
+            const isActive = activeCategory === cat.id;
+            return (
+              <button key={cat.id} onClick={() => selectCat(cat.id)} className="shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all"
+                style={{
+                  background: isActive ? "var(--color-accent)" : "#fff",
+                  color: isActive ? "#fff" : "var(--color-text-soft)",
+                  border: isActive ? "none" : "1px solid var(--color-border)",
+                }}>
+                {cat.icon} {cat.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Desktop sidebar */}
@@ -133,7 +145,7 @@ export default function HomeContent() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 min-w-0 space-y-10">
+      <div className="flex-1 min-w-0 space-y-6 sm:space-y-10">
         {/* Search */}
         <div className="relative">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--color-text-muted)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -148,37 +160,41 @@ export default function HomeContent() {
           {search && <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded-md" style={{ color: "var(--color-text-muted)" }}>清除</button>}
         </div>
 
-        {/* Hero */}
+        {/* Hero — responsive: stack on mobile, split on desktop */}
         {featured && isHome && (
           <ScrollReveal>
-            <div className="p-2 rounded-[var(--radius-2xl)]" style={{ background: "linear-gradient(135deg, #F0F4FF 0%, #F8F6FF 50%, #FDFAFF 100%)", border: "1px solid rgba(0,0,0,0.05)" }}>
-              <div className="relative rounded-[calc(var(--radius-2xl)-4px)] overflow-hidden" style={{ minHeight: "300px", padding: "48px", background: "rgba(255,255,255,0.5)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+            <div className="p-1.5 sm:p-2 rounded-[var(--radius-xl)] sm:rounded-[var(--radius-2xl)]" style={{ background: "linear-gradient(135deg, #F0F4FF 0%, #F8F6FF 50%, #FDFAFF 100%)", border: "1px solid rgba(0,0,0,0.05)" }}>
+              <div className="relative rounded-[calc(var(--radius-xl)-2px)] sm:rounded-[calc(var(--radius-2xl)-4px)] overflow-hidden"
+                style={{ padding: "24px", background: "rgba(255,255,255,0.5)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}>
                 <div className="absolute pointer-events-none" style={{ top: "-30%", right: "-5%", width: "460px", height: "460px", borderRadius: "50%", background: "radial-gradient(circle, rgba(79,124,255,0.10) 0%, transparent 70%)" }} />
-                <div className="relative z-10 flex items-center h-full gap-8" style={{ minHeight: "204px" }}>
-                  <div className="flex-1" style={{ maxWidth: "58%" }}>
-                    <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase mb-5" style={{ background: "var(--color-accent)", color: "#fff" }}>今日推荐</span>
-                    <h2 className="tracking-tight mb-2" style={{ fontSize: "44px", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>{featured.name}</h2>
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+                  <div className="flex-1 sm:max-w-[58%]" style={{ maxWidth: "100%" }}>
+                    <span className="inline-block rounded-full px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold tracking-[0.18em] uppercase mb-3 sm:mb-5" style={{ background: "var(--color-accent)", color: "#fff" }}>今日推荐</span>
+                    <h2 className="tracking-tight mb-1.5 sm:mb-2 text-[28px] sm:text-[44px]" style={{ fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.02em", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>{featured.name}</h2>
                     {(featured.subtitle || featured.description) && (
-                      <p className="mb-8 line-clamp-2" style={{ fontSize: "16px", lineHeight: 1.6, color: "var(--color-text-soft)", maxWidth: "460px" }}>
+                      <p className="mb-5 sm:mb-8 line-clamp-2" style={{ fontSize: "15px", lineHeight: 1.5, color: "var(--color-text-soft)" }}>
                         {featured.subtitle || stripHtml(featured.description)}
                       </p>
                     )}
-                    <div className="flex gap-3">
-                      <a href={featured.link} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
+                    <div className="flex gap-2.5 sm:gap-3">
+                      <a href={featured.link} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 sm:gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm font-semibold transition-all"
                         style={{ background: "var(--color-accent)", color: "#fff", transition: "transform 200ms var(--ease-spring), box-shadow 200ms var(--ease-spring)" }}
                         onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(37,99,235,0.28)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
                         立即打开
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full transition-transform" style={{ background: "rgba(255,255,255,0.2)" }}>
+                        <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-transform" style={{ background: "rgba(255,255,255,0.2)" }}>
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6" /></svg>
                         </span>
                       </a>
-                      <Link href={`/resource/${featured.id}`} className="group inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
-                        style={{ background: "#fff", color: "var(--color-text)", border: "1.5px solid var(--color-border)", transition: "all 200ms var(--ease-spring)" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; e.currentTarget.style.color = "var(--color-accent)"; e.currentTarget.style.transform = "scale(1.02)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; e.currentTarget.style.color = "var(--color-text)"; e.currentTarget.style.transform = "scale(1)"; }}>
+                      <Link href={`/resource/${featured.id}`} className="group inline-flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm font-semibold transition-all"
+                        style={{ background: "#fff", color: "var(--color-text)", border: "1.5px solid var(--color-border)", transition: "all 200ms var(--ease-spring)" }}>
                         查看详情
                       </Link>
+                    </div>
+                  </div>
+                  <div className="flex sm:hidden shrink-0 justify-center mt-2">
+                    <div className="flex items-center justify-center select-none rounded-[20px]" style={{ width: "100px", height: "100px", background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.8)" }}>
+                      <HeroFavicon link={featured.link} fallback={cMap.get(featured.category)?.icon || "📦"} />
                     </div>
                   </div>
                   <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ width: "42%" }}>
@@ -449,14 +465,4 @@ function Empty({ message, hint }: { message: string; hint: string }) {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").slice(0, 200);
-}
-
-/** Split HTML description into lines (by <p> / <br>), return line N or empty */
-function descLines(html: string, n: number): string {
-  const text = html
-    .replace(/<\/(p|h[1-6]|li|div)>/gi, "\n")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]*>/g, "");
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-  return lines[n] || "";
 }
