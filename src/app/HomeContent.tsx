@@ -63,18 +63,19 @@ export default function HomeContent() {
 
   const isHome = !activeCategory && !search;
 
-  // Carousel: cycle through display resources every 5s
+  // Carousel: only admin-featured resources, fallback to single latest
+  const featuredList = useMemo(() => display.filter((r) => r.featured), [display]);
+  const carouselSlides = featuredList.length > 0 ? featuredList : [display[0]].filter(Boolean);
   const [slideIdx, setSlideIdx] = useState(0);
   useEffect(() => {
-    if (!isHome || display.length <= 1) return;
-    const t = setInterval(() => setSlideIdx((i) => (i + 1) % Math.min(display.length, 5)), 5000);
+    if (!isHome || carouselSlides.length <= 1) return;
+    const t = setInterval(() => setSlideIdx((i) => (i + 1) % carouselSlides.length), 5000);
     return () => clearInterval(t);
-  }, [isHome, display.length]);
-  // reset when display changes
-  useEffect(() => { setSlideIdx(0); }, [display.length]);
+  }, [isHome, carouselSlides.length]);
+  useEffect(() => { setSlideIdx(0); }, [carouselSlides.length]);
 
-  const featured = display.find((r) => r.featured) || display[slideIdx] || display[0];
-  const totalSlides = Math.min(display.length, 5);
+  const featured = carouselSlides[slideIdx] || display[0];
+  const totalSlides = carouselSlides.length;
 
   // recent = last 4 by time
   const recent = useMemo(() => {
@@ -292,10 +293,11 @@ export default function HomeContent() {
 
                 {/* Right: 40% icon — double-bezel with float animation */}
                 <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%" }}>
-                  {/* Outer tray */}
+                  {/* Outer tray — visible frame */}
                   <div className="rounded-[20px] p-1.5"
                     style={{
-                      background: "rgba(0,0,0,0.03)",
+                      background: "rgba(0,0,0,0.04)",
+                      border: "1px solid rgba(0,0,0,0.06)",
                       animation: "icon-float 5s ease-in-out infinite",
                     }}>
                     {/* Inner glass plate */}
