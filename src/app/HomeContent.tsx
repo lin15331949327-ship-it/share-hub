@@ -297,70 +297,28 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
   );
 }
 
-/* ═══ Draggable mode switch — snap to edge + collapse/expand ═══ */
+/* ═══ Draggable mode switch button ═══ */
 function DraggableToggle({ isMobile }: { isMobile: boolean }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const dragging = useRef(false);
   const moved = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
-  const [collapsed, setCollapsed] = useState(false);
-  const [edge, setEdge] = useState<"left" | "right">("right");
 
-  const SNAP = 60; // px from edge to trigger snap
-  const COLLAPSED_W = 12;
-  const FULL_W = 44;
-
-  /* Restore saved state */
+  /* Restore saved position */
   useEffect(() => {
     const el = btnRef.current;
     if (!el) return;
     try {
       const raw = localStorage.getItem("sh-toggle-pos");
       if (raw) {
-        const data = JSON.parse(raw);
-        if (data.collapsed) {
-          setCollapsed(true);
-          setEdge(data.edge || "right");
-        }
-        if (data.left !== undefined) {
-          el.style.left = data.left + "px";
-          el.style.top = (data.top || 100) + "px";
-          el.style.right = "auto";
-          el.style.bottom = "auto";
-        }
+        const { left, top } = JSON.parse(raw);
+        el.style.left = left + "px";
+        el.style.top = top + "px";
+        el.style.right = "auto";
+        el.style.bottom = "auto";
       }
     } catch { /* ignore */ }
   }, []);
-
-  /* Apply collapsed position */
-  useEffect(() => {
-    const el = btnRef.current;
-    if (!el) return;
-    if (collapsed) {
-      const top = parseInt(el.style.top || "100");
-      el.style.transition = "all 400ms var(--ease-spring)";
-      if (edge === "right") {
-        el.style.left = (window.innerWidth - COLLAPSED_W - 2) + "px";
-      } else {
-        el.style.left = "2px";
-      }
-      el.style.top = top + "px";
-      el.style.right = "auto";
-      el.style.bottom = "auto";
-    }
-  }, [collapsed, edge]);
-
-  /* Save position + collapsed state */
-  function save(el: HTMLButtonElement, col: boolean, edg: string) {
-    try {
-      localStorage.setItem("sh-toggle-pos", JSON.stringify({
-        left: parseInt(el.style.left) || 0,
-        top: parseInt(el.style.top) || 0,
-        collapsed: col,
-        edge: edg,
-      }));
-    } catch { /* ignore */ }
-  }
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const el = btnRef.current;
@@ -386,46 +344,27 @@ function DraggableToggle({ isMobile }: { isMobile: boolean }) {
         Math.abs(y - parseInt(el.style.top || "0")) > 3) {
       moved.current = true;
     }
-    const w = collapsed ? FULL_W : FULL_W;
-    const h = collapsed ? FULL_W : FULL_W;
-    el.style.left = Math.max(0, Math.min(x, window.innerWidth - w)) + "px";
-    el.style.top = Math.max(0, Math.min(y, window.innerHeight - h)) + "px";
-  }, [collapsed]);
+    el.style.left = Math.max(0, Math.min(x, window.innerWidth - 44)) + "px";
+    el.style.top = Math.max(0, Math.min(y, window.innerHeight - 44)) + "px";
+  }, []);
 
   const onPointerUp = useCallback(() => {
     const el = btnRef.current;
     if (!el) return;
     dragging.current = false;
-    el.style.transition = "all 400ms var(--ease-spring)";
-
+    el.style.transition = "all 300ms var(--ease-spring)";
     if (moved.current) {
-      // Check snap to edge
-      const left = parseInt(el.style.left || "0");
-      if (left < SNAP) {
-        setCollapsed(true);
-        setEdge("left");
-        save(el, true, "left");
-      } else if (left > window.innerWidth - FULL_W - SNAP) {
-        setCollapsed(true);
-        setEdge("right");
-        save(el, true, "right");
-      } else {
-        setCollapsed(false);
-        save(el, false, "right");
-      }
+      try {
+        localStorage.setItem("sh-toggle-pos", JSON.stringify({
+          left: parseInt(el.style.left) || 0,
+          top: parseInt(el.style.top) || 0,
+        }));
+      } catch { /* ignore */ }
     }
   }, []);
 
   function toggle() {
     if (moved.current) return;
-    if (collapsed) {
-      // Expand from edge
-      setCollapsed(false);
-      const el = btnRef.current;
-      if (el) save(el, false, "right");
-      return;
-    }
-    // Switch mode
     const url = new URL(window.location.href);
     url.searchParams.set("view", isMobile ? "desktop" : "mobile");
     window.location.href = url.toString();
@@ -439,38 +378,22 @@ function DraggableToggle({ isMobile }: { isMobile: boolean }) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      className="fixed bottom-6 right-6 z-50 flex items-center justify-center shadow-lg transition-all"
+      className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95"
       style={{
-        width: collapsed ? COLLAPSED_W : FULL_W,
-        height: collapsed ? 40 : FULL_W,
-        borderRadius: collapsed ? (edge === "right" ? "12px 0 0 12px" : "0 12px 12px 0") : "50%",
         background: isMobile ? "#06B6D4" : "var(--color-accent)",
         color: "#fff",
         border: "none",
         cursor: "grab",
         touchAction: "none",
-        overflow: "hidden",
       }}
-      title={collapsed ? "点击展开 / 拖拽移动" : isMobile ? "拖拽靠边可收起 / 点击切换桌面版" : "拖拽靠边可收起 / 点击切换手机版"}>
-      {collapsed ? (
-        /* Collapsed: tiny chevron pointing inward */
-        <svg className="w-2.5 h-4 pointer-events-none shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          {edge === "right" ? (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          )}
-        </svg>
-      ) : (
-        /* Full: mode switch icon */
-        <svg className="w-5 h-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          {isMobile ? (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          )}
-        </svg>
-      )}
+      title={isMobile ? "拖拽移动 / 点击切换桌面版" : "拖拽移动 / 点击切换手机版"}>
+      <svg className="w-5 h-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        {isMobile ? (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        )}
+      </svg>
     </button>
   );
 }
