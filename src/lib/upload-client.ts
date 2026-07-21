@@ -15,7 +15,11 @@ export function getContentType(file: File): string {
     jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp",
     gif: "image/gif", svg: "image/svg+xml",
     zip: "application/zip", rar: "application/x-rar-compressed", "7z": "application/x-7z-compressed",
-    exe: "application/x-msdownload", msi: "application/x-msdownload",
+    exe: "application/x-msdownload", msi: "application/x-msi",
+    appx: "application/x-ms-appx", msix: "application/zip",
+    dmg: "application/x-apple-diskimage", pkg: "application/x-newton-compatible-pkg",
+    deb: "application/vnd.debian.binary-package", rpm: "application/x-rpm",
+    iso: "application/x-iso9660-image", apk: "application/vnd.android.package-archive",
   };
   return map[ext] || "application/octet-stream";
 }

@@ -211,7 +211,7 @@ export default function ResourceForm({ categories, resource }: Props) {
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f, "image"); e.target.value = ""; }} />
             <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/ogg" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f, "video"); e.target.value = ""; }} />
-            <input ref={packageInputRef} type="file" accept="*" className="hidden"
+            <input ref={packageInputRef} type="file" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f, "file"); e.target.value = ""; }} />
           </div>
           <EditorContent editor={editor}
