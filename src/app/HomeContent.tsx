@@ -129,79 +129,128 @@ export default function HomeContent() {
         </div>
       </div>
 
-      {/* ====== Hero ====== */}
+      {/* ====== Hero Banner ====== */}
       {featured && !search && !activeCategory && (
-        <Link
-          href={`/resource/${featured.id}`}
-          className="block rounded-[var(--radius-xl)] overflow-hidden transition-all duration-[var(--dur-normal)]"
+        <div
+          className="relative rounded-[28px] overflow-hidden transition-all duration-[var(--dur-normal)]"
           style={{
-            background: "linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #faf5ff 100%)",
+            background: "linear-gradient(135deg, #F6F7FF 0%, #FBFAFF 100%)",
             border: "1px solid var(--color-border)",
-            textDecoration: "none",
-            boxShadow: "var(--shadow-card)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = "var(--shadow-card-hover)";
-            e.currentTarget.style.transform = "translateY(-1px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = "var(--shadow-card)";
-            e.currentTarget.style.transform = "translateY(0)";
+            boxShadow: "0 20px 60px rgba(79,124,255,0.08)",
+            minHeight: "320px",
+            padding: "48px",
           }}
         >
-          <div className="flex items-center min-h-[240px] px-8 py-8">
-            {/* Left: text */}
-            <div className="flex-1 min-w-0">
-              <span className="inline-block text-xs font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full mb-4"
-                style={{ background: "var(--color-accent)", color: "#fff" }}>
+          {/* Radial glow */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              top: "-40%",
+              right: "-10%",
+              width: "500px",
+              height: "500px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(79,124,255,0.10) 0%, transparent 70%)",
+            }}
+          />
+
+          <div className="relative z-10 flex items-center h-full gap-8" style={{ minHeight: "224px" }}>
+            {/* Left: text (60%) */}
+            <div className="flex-1" style={{ maxWidth: "60%" }}>
+              <span
+                className="inline-block text-xs font-semibold tracking-wide uppercase px-2.5 py-1 rounded-full mb-5"
+                style={{ background: "var(--color-accent)", color: "#fff" }}
+              >
                 今日推荐
               </span>
-              <h2 className="font-bold mb-2 tracking-tight" style={{
-                fontSize: "var(--text-3xl)",
-                color: "var(--color-text)",
-                fontFamily: "var(--font-display)",
-              }}>
+              <h2
+                className="tracking-tight mb-3"
+                style={{
+                  fontSize: "42px",
+                  fontWeight: 800,
+                  lineHeight: 1.15,
+                  color: "var(--color-text)",
+                  fontFamily: "var(--font-display)",
+                }}
+              >
                 {featured.name}
               </h2>
               {featured.description && (
-                <p className="mb-6 line-clamp-2" style={{
-                  fontSize: "var(--text-base)",
-                  color: "var(--color-text-soft)",
-                  maxWidth: "480px",
-                }}>
+                <p
+                  className="mb-7 line-clamp-2"
+                  style={{
+                    fontSize: "16px",
+                    lineHeight: 1.6,
+                    color: "var(--color-text-soft)",
+                    maxWidth: "480px",
+                  }}
+                >
                   {stripHtml(featured.description)}
                 </p>
               )}
               <div className="flex gap-3">
-                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors"
-                  style={{ background: "var(--color-accent)", color: "#fff" }}>
+                <a
+                  href={featured.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-[var(--radius-md)] text-sm font-semibold transition-all"
+                  style={{ background: "var(--color-accent)", color: "#fff" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 14px rgba(37,99,235,0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
                   立即打开
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
-                </span>
+                </a>
                 <Link
                   href={`/resource/${featured.id}`}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-[var(--radius-md)] text-sm font-semibold transition-all"
                   style={{
                     background: "#fff",
                     color: "var(--color-text)",
-                    border: "1px solid var(--color-border)",
+                    border: "1.5px solid var(--color-border)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--color-accent)";
+                    e.currentTarget.style.color = "var(--color-accent)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--color-border)";
+                    e.currentTarget.style.color = "var(--color-text)";
                   }}
                 >
                   查看详情
                 </Link>
               </div>
             </div>
-            {/* Right: icon */}
-            <div className="hidden sm:flex shrink-0 w-48 h-48 items-center justify-center ml-8">
-              <div className="w-32 h-32 rounded-[var(--radius-xl)] flex items-center justify-center text-6xl select-none"
-                style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)" }}>
-                {(cMap.get(featured.category)?.icon || "📦")}
+
+            {/* Right: icon area (40%) */}
+            <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ width: "40%" }}>
+              <div
+                className="flex items-center justify-center select-none"
+                style={{
+                  width: "320px",
+                  height: "200px",
+                  borderRadius: "20px",
+                  background: "rgba(255,255,255,0.55)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  fontSize: "80px",
+                  border: "1px solid rgba(255,255,255,0.6)",
+                }}
+              >
+                {cMap.get(featured.category)?.icon || "📦"}
               </div>
             </div>
           </div>
-        </Link>
+        </div>
       )}
 
       {/* ====== Single-category header ====== */}
