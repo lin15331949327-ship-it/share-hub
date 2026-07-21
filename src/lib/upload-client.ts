@@ -1,10 +1,28 @@
 /**
  * Client-side upload to Cloudflare Worker.
- * Supports simple upload (≤50MB) and multipart (>50MB, no size limit).
+ * Simple upload ≤50MB. Multipart >50MB (no size limit, 10MB chunks + retry).
  */
 
 const WORKER = process.env.NEXT_PUBLIC_UPLOAD_WORKER || "https://share-hub-upload.lin15331949327.workers.dev";
-const CHUNK_SIZE = 25 * 1024 * 1024; // 25MB
+const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB — keeps Worker under timeout on typical uplinks
+const MAX_RETRIES = 3;
+
+async function fetchWithRetry(url: string, init: RequestInit, retries = MAX_RETRIES): Promise<Response> {
+  let lastErr: unknown;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, init);
+      return res;
+    } catch (e) {
+      lastErr = e;
+      if (i < retries - 1) {
+        // exponential backoff: 1s, 2s, 4s
+        await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, i)));
+      }
+    }
+  }
+  throw lastErr;
+}
 
 export function getContentType(file: File): string {
   if (file.type && file.type.length > 0) return file.type;
@@ -31,7 +49,7 @@ export interface UploadProgress {
 
 async function simpleUpload(file: File): Promise<string> {
   const ct = encodeURIComponent(getContentType(file));
-  const res = await fetch(
+  const res = await fetchWithRetry(
     `${WORKER}/upload?filename=${encodeURIComponent(file.name)}&ct=${ct}`,
     { method: "POST", body: file }
   );
@@ -47,7 +65,7 @@ async function multipartUpload(
   const ct = encodeURIComponent(getContentType(file));
   const totalParts = Math.ceil(file.size / CHUNK_SIZE);
 
-  const startRes = await fetch(
+  const startRes = await fetchWithRetry(
     `${WORKER}/mp/start?filename=${encodeURIComponent(file.name)}&ct=${ct}`,
     { method: "POST" }
   );
@@ -60,7 +78,8 @@ async function multipartUpload(
     const end = Math.min(start + CHUNK_SIZE, file.size);
     const chunk = file.slice(start, end);
     onProgress({ current: i + 1, total: totalParts + 1 });
-    const partRes = await fetch(
+
+    const partRes = await fetchWithRetry(
       `${WORKER}/mp/part?key=${encodeURIComponent(key)}&uploadId=${uploadId}&part=${i + 1}`,
       { method: "POST", body: chunk }
     );
@@ -70,7 +89,7 @@ async function multipartUpload(
   }
 
   onProgress({ current: totalParts + 1, total: totalParts + 1 });
-  const doneRes = await fetch(
+  const doneRes = await fetchWithRetry(
     `${WORKER}/mp/complete?key=${encodeURIComponent(key)}&uploadId=${uploadId}`,
     {
       method: "POST",
