@@ -15,8 +15,39 @@ export default function HomeContent() {
 
   if (data.loading) {
     return (
-      <div className="flex items-center justify-center" style={{ paddingTop: "120px" }}>
-        <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: "var(--color-border)", borderTopColor: "var(--color-accent)" }} />
+      <div className="flex gap-8" style={{ paddingTop: "24px" }}>
+        {/* Sidebar skeleton */}
+        <aside className="hidden lg:block shrink-0 sticky top-28 self-start" style={{ width: "220px" }}>
+          <div className="rounded-[var(--radius-xl)] p-4 space-y-2" style={{ background: "#fff", border: "1px solid var(--color-border)" }}>
+            <div className="h-3 w-12 rounded-full animate-pulse" style={{ background: "var(--color-paper-3)" }} />
+            {[1,2,3,4,5,6,7,8].map((i) => (
+              <div key={i} className="h-9 rounded-[var(--radius-md)] animate-pulse" style={{ background: "var(--color-paper-2)", animationDelay: `${i*80}ms` }} />
+            ))}
+          </div>
+        </aside>
+        {/* Grid skeleton */}
+        <div className="flex-1 min-w-0 space-y-8 sm:space-y-14">
+          {/* Search skeleton */}
+          <div className="h-11 rounded-full animate-pulse" style={{ background: "var(--color-paper-2)", maxWidth: "480px" }} />
+          {/* Card skeletons */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {[1,2,3,4,5,6].map((i) => (
+              <div key={i} className="rounded-[var(--radius-xl)] p-6 animate-pulse" style={{ background: "#fff", border: "1px solid var(--color-border)", animationDelay: `${i*100}ms`, minHeight: "140px" }}>
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-[var(--radius-md)] shrink-0" style={{ background: "var(--color-paper-3)" }} />
+                  <div className="flex-1 space-y-2 pt-0.5">
+                    <div className="h-4 w-28 rounded" style={{ background: "var(--color-paper-3)" }} />
+                    <div className="h-3 w-20 rounded" style={{ background: "var(--color-paper-2)" }} />
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  <div className="h-5 w-14 rounded-md" style={{ background: "var(--color-accent-glow)" }} />
+                  <div className="h-5 w-12 rounded-md" style={{ background: "var(--color-paper-2)" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -83,19 +114,40 @@ function DesktopView({ data }: { data: ReturnType<typeof useHomeData> }) {
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex shrink-0 flex-col gap-1 sticky top-28 self-start" style={{ width: "220px" }}>
-        <div className="rounded-[var(--radius-xl)] border overflow-hidden" style={{ background: "#fff", borderColor: "var(--color-border)", boxShadow: "var(--shadow-xs)" }}>
-          <div className="px-4 pt-4 pb-2"><p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: "var(--color-text-muted)" }}>分类</p></div>
+        <div className="rounded-[var(--radius-xl)] overflow-hidden" style={{ background: "#fff", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-xs)" }}>
+          <div className="px-4 pt-4 pb-2">
+            <p className="text-[11px] font-semibold tracking-[0.12em] uppercase" style={{ color: "var(--color-text-muted)" }}>分类</p>
+          </div>
           <div className="px-2 pb-2">
-            <button onClick={() => selectCat(null)} className="flex items-center justify-between w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all" style={{ background: activeCategory === null ? "var(--color-accent-glow)" : "transparent", color: activeCategory === null ? "var(--color-accent)" : "var(--color-text)", transition: "all 200ms var(--ease-spring)" }}>
-              <span>首页</span><span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{allCount}</span>
+            <button onClick={() => selectCat(null)}
+              className="flex items-center justify-between w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all"
+              style={{
+                background: activeCategory === null ? "var(--color-accent-glow)" : "transparent",
+                color: activeCategory === null ? "var(--color-accent)" : "var(--color-text)",
+                borderLeft: activeCategory === null ? "2px solid var(--color-accent)" : "2px solid transparent",
+                transition: "all 200ms var(--ease-spring)",
+              }}>
+              <span>全部</span>
+              <span className="text-xs tabular-nums" style={{ color: activeCategory === null ? "var(--color-accent)" : "var(--color-text-muted)" }}>{allCount}</span>
             </button>
             {sidebarCats.map((cat) => {
               const count = resources.filter((r) => r.category === cat.id).length;
               if (count === 0) return null;
               const isActive = activeCategory === cat.id;
               return (
-                <button key={cat.id} onClick={() => selectCat(cat.id)} className="flex items-center justify-between w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm transition-all" style={{ background: isActive ? "var(--color-accent-glow)" : "transparent", color: isActive ? "var(--color-accent)" : "var(--color-text-soft)", fontWeight: isActive ? 600 : 400, transition: "all 200ms var(--ease-spring)" }}>
-                  <span className="truncate">{cat.icon} {cat.name}</span><span className="text-xs ml-2 shrink-0" style={{ color: "var(--color-text-muted)" }}>{count}</span>
+                <button key={cat.id} onClick={() => selectCat(cat.id)}
+                  className="flex items-center justify-between w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm transition-all"
+                  style={{
+                    background: isActive ? "var(--color-accent-glow)" : "transparent",
+                    color: isActive ? "var(--color-accent)" : "var(--color-text-soft)",
+                    fontWeight: isActive ? 600 : 400,
+                    borderLeft: isActive ? "2px solid var(--color-accent)" : "2px solid transparent",
+                    transition: "all 200ms var(--ease-spring)",
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "var(--color-paper-2)"; }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
+                  <span className="truncate">{cat.icon} {cat.name}</span>
+                  <span className="text-xs ml-2 shrink-0 tabular-nums" style={{ color: "var(--color-text-muted)" }}>{count}</span>
                 </button>
               );
             })}
@@ -108,7 +160,7 @@ function DesktopView({ data }: { data: ReturnType<typeof useHomeData> }) {
         {/* Search */}
         <div className="relative">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--color-text-muted)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索资源..."
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索工具、网站、教程…"
             className="w-full h-11 pl-11 pr-4 rounded-[var(--radius-full)] border text-sm outline-none transition-all"
             style={{ background: "#fff", borderColor: "var(--color-border)", color: "var(--color-text)", boxShadow: "var(--shadow-xs)" }}
             onFocus={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; e.currentTarget.style.boxShadow = "var(--shadow-glow)"; }}
@@ -217,12 +269,13 @@ function DesktopSections({ display, cMap, recent, categorySections, selectCat }:
 function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
   const tags = Array.isArray(resource.tags) ? resource.tags : [];
   return (
-    <Link href={`/resource/${resource.id}`} className="block group" style={{ textDecoration: "none" }}>
-      <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all" style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}>
-        <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all active:scale-[0.985]"
-          style={{ background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}
-          onMouseEnter={(e) => { const p = e.currentTarget.parentElement; if (p) { p.style.background = "var(--color-accent-ring)"; p.style.transform = "translateY(-2px)"; p.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-card-hover)"; } }}
-          onMouseLeave={(e) => { const p = e.currentTarget.parentElement; if (p) { p.style.background = "var(--color-border)"; p.style.transform = "translateY(0)"; p.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)"; } }}>
+    <Link href={`/resource/${resource.id}`} className="block group outline-none" style={{ textDecoration: "none" }}>
+      <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
+        style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-accent-ring)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-card-hover)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-border)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)"; }}>
+        <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-[var(--color-accent-ring)]"
+          style={{ background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}>
           <div className="flex items-start gap-3 mb-2.5">
             <FaviconIcon link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
             <div className="flex-1 min-w-0 pt-0.5">
