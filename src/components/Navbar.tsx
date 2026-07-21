@@ -9,27 +9,17 @@ export default function Navbar() {
   const [hidden, setHidden] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    /* Hide on mobile view — read from URL on client side only */
-    setHidden(new URLSearchParams(window.location.search).get("view") === "mobile");
-  }, [pathname]);
-
-  if (hidden) return null;
   const navRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
 
+  useEffect(() => { fetch("/api/auth").then((r) => r.json()).then((d) => setRole(d.role)); }, [pathname]);
+
   useEffect(() => {
-    fetch("/api/auth").then((r) => r.json()).then((d) => setRole(d.role));
+    setHidden(new URLSearchParams(window.location.search).get("view") === "mobile");
   }, [pathname]);
 
-  async function logout() {
-    await fetch("/api/auth", { method: "DELETE" });
-    setRole(null);
-    router.push("/");
-  }
-
+  /* ── ALL hooks above this line ── */
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const el = navRef.current;
     if (!el) return;
@@ -45,7 +35,6 @@ export default function Navbar() {
     if (!dragging.current || !navRef.current) return;
     const x = e.clientX - offset.current.x;
     const y = e.clientY - offset.current.y;
-    // clamp to viewport
     const w = navRef.current.offsetWidth;
     const h = navRef.current.offsetHeight;
     const cx = Math.max(0, Math.min(x, window.innerWidth - w));
@@ -61,6 +50,15 @@ export default function Navbar() {
     navRef.current.style.cursor = "grab";
     navRef.current.style.transition = "all 300ms var(--ease-spring)";
   }, []);
+
+  if (hidden) return null;
+  /* ── early return above, no hooks below ── */
+
+  async function logout() {
+    await fetch("/api/auth", { method: "DELETE" });
+    setRole(null);
+    router.push("/");
+  }
 
   return (
     <div
@@ -97,7 +95,6 @@ export default function Navbar() {
           e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)";
         }}
       >
-        {/* Drag handle */}
         <span className="select-none mr-1" style={{ color: "var(--color-text-muted)", fontSize: "12px", letterSpacing: "2px", lineHeight: 1, cursor: "grab" }}>
           ⋮⋮
         </span>
