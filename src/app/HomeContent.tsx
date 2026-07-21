@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { filterForDisplay, sortForDisplay, catMap } from "@/lib/resources";
+import { getFaviconUrl } from "@/lib/favicon";
 import type { Resource, Category } from "@/lib/types";
 
 function getInitialCategory(): string | null {
@@ -157,8 +158,8 @@ export default function HomeContent() {
                   </div>
                   <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ width: "42%" }}>
                     <div className="rounded-[var(--radius-2xl)] p-1" style={{ background: "rgba(0,0,0,0.03)" }}>
-                      <div className="flex items-center justify-center select-none rounded-[calc(var(--radius-2xl)-4px)]" style={{ width: "300px", height: "180px", background: "rgba(255,255,255,0.6)", fontSize: "72px", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)" }}>
-                        {cMap.get(featured.category)?.icon || "📦"}
+                      <div className="flex items-center justify-center select-none rounded-[calc(var(--radius-2xl)-4px)]" style={{ width: "300px", height: "180px", background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)", overflow: "hidden" }}>
+                        <HeroFavicon link={featured.link} fallback={cMap.get(featured.category)?.icon || "📦"} />
                       </div>
                     </div>
                   </div>
@@ -233,6 +234,46 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
   );
 }
 
+/* ====== Favicon with emoji fallback ====== */
+
+function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
+  const favicon = getFaviconUrl(link, 128);
+  return (
+    <>
+      {favicon ? (
+        <img src={favicon} alt="" className="w-20 h-20 object-contain"
+          loading="lazy"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+      ) : null}
+      <span style={{ fontSize: "72px", display: favicon ? "none" : "inline" }}>{fallback}</span>
+    </>
+  );
+}
+
+function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
+  const favicon = getFaviconUrl(link);
+  return (
+    <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none relative"
+      style={{ background: "var(--color-paper-2)", overflow: "hidden" }}>
+      {favicon ? (
+        <img
+          src={favicon}
+          alt={alt}
+          className="w-7 h-7 object-contain"
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+            (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+          }}
+        />
+      ) : null}
+      <span className={`text-xl ${favicon ? "hidden" : ""}`} style={{ position: favicon ? "absolute" : "static", inset: 0, display: favicon ? "flex" : "inline", alignItems: "center", justifyContent: "center" }}>
+        {fallback}
+      </span>
+    </div>
+  );
+}
+
 /* ====== Resource Card — fixed height, structured layout ====== */
 
 function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
@@ -255,12 +296,9 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
             if (p) { p.style.background = "var(--color-border)"; p.style.transform = "translateY(0)"; p.style.boxShadow = "none"; }
           }}>
 
-          {/* Row 1: icon + title + featured star */}
+          {/* Row 1: favicon + title + featured star */}
           <div className="flex items-start gap-3 mb-2">
-            <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center text-xl select-none"
-              style={{ background: "var(--color-paper-2)" }}>
-              {category?.icon || "📦"}
-            </div>
+            <FaviconIcon link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
             <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold truncate" style={{ fontSize: "15px", color: "var(--color-text)", fontFamily: "var(--font-body)" }}>
