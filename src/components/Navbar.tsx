@@ -4,84 +4,185 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
+const SNAP = 60; // px from edge to trigger snap
+
 export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [snapEdge, setSnapEdge] = useState<"left" | "right" | "top">("top");
   const router = useRouter();
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const moved = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
 
   useEffect(() => { fetch("/api/auth").then((r) => r.json()).then((d) => setRole(d.role)); }, [pathname]);
 
-  /* Restore saved position on mount */
+  /* Restore saved state on mount */
   useEffect(() => {
     const el = navRef.current;
     if (!el) return;
     try {
       const raw = localStorage.getItem("sh-nav-pos");
       if (raw) {
-        const { left, top } = JSON.parse(raw);
-        el.style.left = left + "px";
-        el.style.top = top + "px";
-        el.style.transform = "none";
+        const data = JSON.parse(raw);
+        if (data.collapsed) {
+          setCollapsed(true);
+          setSnapEdge(data.edge || "top");
+        }
+        if (data.left !== undefined) {
+          el.style.left = data.left + "px";
+          el.style.top = data.top + "px";
+          el.style.transform = "none";
+        }
       }
     } catch { /* ignore */ }
   }, []);
+
+  /* Apply collapsed position */
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el || !collapsed) return;
+    const top = parseInt(el.style.top || "16");
+    el.style.transition = "all 400ms var(--ease-spring)";
+    el.style.transform = "none";
+    if (snapEdge === "left") {
+      el.style.left = "4px";
+      el.style.top = Math.max(4, Math.min(top, window.innerHeight - 48)) + "px";
+    } else if (snapEdge === "right") {
+      el.style.left = (window.innerWidth - 44) + "px";
+      el.style.top = Math.max(4, Math.min(top, window.innerHeight - 48)) + "px";
+    } else {
+      el.style.left = Math.max(0, Math.min(parseInt(el.style.left || "0"), window.innerWidth - 44)) + "px";
+      el.style.top = "4px";
+    }
+  }, [collapsed, snapEdge]);
 
   useEffect(() => {
     setHidden(new URLSearchParams(window.location.search).get("view") === "mobile");
   }, [pathname]);
 
   /* ── ALL hooks above this line ── */
+
+  function persist(el: HTMLDivElement, col: boolean, edge: string) {
+    try {
+      localStorage.setItem("sh-nav-pos", JSON.stringify({
+        left: parseInt(el.style.left) || 0,
+        top: parseInt(el.style.top) || 0,
+        collapsed: col,
+        edge,
+      }));
+    } catch { /* ignore */ }
+  }
+
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const el = navRef.current;
     if (!el) return;
     dragging.current = true;
+    moved.current = false;
     const rect = el.getBoundingClientRect();
     offset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     el.style.cursor = "grabbing";
     el.style.transition = "none";
+    el.style.transform = "none";
+    el.style.left = rect.left + "px";
+    el.style.top = rect.top + "px";
     el.setPointerCapture(e.pointerId);
   }, []);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragging.current || !navRef.current) return;
+    const el = navRef.current;
     const x = e.clientX - offset.current.x;
     const y = e.clientY - offset.current.y;
-    const w = navRef.current.offsetWidth;
-    const h = navRef.current.offsetHeight;
-    const cx = Math.max(0, Math.min(x, window.innerWidth - w));
-    const cy = Math.max(0, Math.min(y, window.innerHeight - h));
-    navRef.current.style.left = cx + "px";
-    navRef.current.style.top = cy + "px";
-    navRef.current.style.transform = "none";
-  }, []);
+    if (Math.abs(x - parseInt(el.style.left || "0")) > 2 ||
+        Math.abs(y - parseInt(el.style.top || "0")) > 2) {
+      moved.current = true;
+    }
+    const w = collapsed ? 44 : el.offsetWidth;
+    const h = collapsed ? 44 : el.offsetHeight;
+    el.style.left = Math.max(0, Math.min(x, window.innerWidth - w)) + "px";
+    el.style.top = Math.max(0, Math.min(y, window.innerHeight - h)) + "px";
+  }, [collapsed]);
 
   const onPointerUp = useCallback(() => {
     const el = navRef.current;
     if (!el) return;
     dragging.current = false;
     el.style.cursor = "grab";
-    el.style.transition = "all 300ms var(--ease-spring)";
-    /* persist position */
-    try {
-      localStorage.setItem("sh-nav-pos", JSON.stringify({
-        left: parseInt(el.style.left) || 0,
-        top: parseInt(el.style.top) || 0,
-      }));
-    } catch { /* ignore */ }
+    el.style.transition = "all 400ms var(--ease-spring)";
+
+    if (moved.current) {
+      const left = parseInt(el.style.left || "0");
+      const top = parseInt(el.style.top || "0");
+
+      if (left < SNAP) {
+        setCollapsed(true); setSnapEdge("left");
+        persist(el, true, "left");
+      } else if (left > window.innerWidth - 200 - SNAP) {
+        setCollapsed(true); setSnapEdge("right");
+        persist(el, true, "right");
+      } else if (top < SNAP) {
+        setCollapsed(true); setSnapEdge("top");
+        persist(el, true, "top");
+      } else {
+        setCollapsed(false);
+        persist(el, false, "top");
+      }
+    }
   }, []);
 
   if (hidden) return null;
-  /* ── early return above, no hooks below ── */
+
+  function handleClick(e: React.MouseEvent) {
+    if (moved.current) return;
+    if (collapsed) {
+      setCollapsed(false);
+      const el = navRef.current;
+      if (el) persist(el, false, "top");
+    }
+  }
 
   async function logout() {
     await fetch("/api/auth", { method: "DELETE" });
     window.location.href = "/";
   }
 
+  /* ── Collapsed: small floating handle ── */
+  if (collapsed) {
+    return (
+      <div
+        ref={navRef}
+        onClick={handleClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="fixed z-50 select-none flex items-center justify-center"
+        style={{
+          width: 40, height: 40,
+          borderRadius: snapEdge === "top" ? "0 0 12px 12px"
+            : snapEdge === "left" ? "0 12px 12px 0"
+            : "12px 0 0 12px",
+          background: "rgba(255,255,255,0.75)",
+          backdropFilter: "blur(16px) saturate(180%)",
+          WebkitBackdropFilter: "blur(16px) saturate(180%)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.08)",
+          cursor: "grab",
+          touchAction: "none",
+        }}
+        title="点击展开 / 拖拽移动">
+        <span style={{ color: "var(--color-text-muted)", fontSize: "14px", letterSpacing: "3px", lineHeight: 1 }}>
+          ⋮⋮
+        </span>
+      </div>
+    );
+  }
+
+  /* ── Expanded: full navbar ── */
   return (
     <div
       ref={navRef}
