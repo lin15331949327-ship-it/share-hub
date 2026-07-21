@@ -363,62 +363,24 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
 
 function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
-  const [loaded, setLoaded] = useState(false);
-  const [giveUp, setGiveUp] = useState(false);
-
-  useEffect(() => {
-    if (sources.length === 0) return;
-    setLoaded(false);
-    setGiveUp(false);
-    const img = new Image();
-    img.src = sources[0];
-    let idx = 0;
-    img.onload = () => setLoaded(true);
-    img.onerror = () => {
-      idx++;
-      if (idx < sources.length) { img.src = sources[idx]; } else { setGiveUp(true); }
-    };
-    const t = setTimeout(() => { if (!loaded) setGiveUp(true); }, 3000);
-    return () => { clearTimeout(t); img.onload = null; img.onerror = null; };
-  }, [link]);
-
-  if (!loaded || giveUp) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
-  return <img src={sources[0]} alt="" className="w-20 h-20 object-contain" />;
+  const [srcIdx, setSrcIdx] = useState(0);
+  if (sources.length === 0 || srcIdx >= sources.length) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
+  return (
+    <img src={sources[srcIdx]} alt="" className="w-20 h-20 object-contain"
+      loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
+  );
 }
 
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const sources = getFaviconSources(link);
-  const [loaded, setLoaded] = useState(false);
-  const [giveUp, setGiveUp] = useState(false);
-
-  // Show emoji immediately, try favicon in background with timeout
-  useEffect(() => {
-    if (sources.length === 0) return;
-    setLoaded(false);
-    setGiveUp(false);
-    const img = new Image();
-    img.src = sources[0];
-    let idx = 0;
-    img.onload = () => setLoaded(true);
-    img.onerror = () => {
-      idx++;
-      if (idx < sources.length) {
-        img.src = sources[idx];
-      } else {
-        setGiveUp(true);
-      }
-    };
-    const t = setTimeout(() => { if (!loaded) setGiveUp(true); }, 3000);
-    return () => { clearTimeout(t); img.onload = null; img.onerror = null; };
-  }, [link]);
-
-  const showImg = loaded && !giveUp;
-
+  const [srcIdx, setSrcIdx] = useState(0);
+  const hasSource = sources.length > 0 && srcIdx < sources.length;
   return (
     <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
       style={{ background: "var(--color-paper-2)", overflow: "hidden" }}>
-      {showImg ? (
-        <img src={sources[0]} alt={alt} className="w-7 h-7 object-contain" />
+      {hasSource ? (
+        <img src={sources[srcIdx]} alt={alt} className="w-7 h-7 object-contain"
+          loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
       ) : (
         <span className="text-xl">{fallback}</span>
       )}
