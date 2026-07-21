@@ -91,6 +91,9 @@ export async function PATCH(
   if (typeof body.featured === "boolean") {
     resource.featured = body.featured;
   }
+  if (typeof body.displayOrder === "number") {
+    resource.displayOrder = body.displayOrder;
+  }
 
   await updateResource(resource);
   return NextResponse.json(resource);

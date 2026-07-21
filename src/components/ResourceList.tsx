@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Resource, Category } from "@/lib/types";
@@ -11,6 +11,9 @@ export default function ResourceList() {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const dragId = useRef<string | null>(null);
+  const dragOverId = useRef<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -43,6 +46,42 @@ export default function ResourceList() {
     );
   }
 
+  // Drag-and-drop reorder
+  function onDragStart(id: string) {
+    dragId.current = id;
+  }
+  function onDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault();
+    dragOverId.current = id;
+  }
+  async function onDrop(targetId: string) {
+    const fromId = dragId.current;
+    if (!fromId || fromId === targetId) return;
+
+    const fromIdx = resources.findIndex((r) => r.id === fromId);
+    const toIdx = resources.findIndex((r) => r.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    // reorder locally
+    const reordered = [...resources];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    // assign new displayOrder based on position (decreasing)
+    const now = Date.now();
+    reordered.forEach((r, i) => {
+      r.displayOrder = now - i;
+    });
+    setResources(reordered);
+
+    // persist the moved item
+    await fetch(`/api/resources/${moved.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ displayOrder: moved.displayOrder }),
+    });
+  }
+
   if (loading) {
     return <p className="text-zinc-400 text-sm">加载中...</p>;
   }
@@ -56,7 +95,12 @@ export default function ResourceList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-900">资源管理</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-zinc-900">资源管理</h2>
+          {role === "admin" && (
+            <span className="text-xs text-zinc-400">拖拽行可排序</span>
+          )}
+        </div>
         <Link
           href="/admin/resources/new"
           className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors"
@@ -72,6 +116,7 @@ export default function ResourceList() {
           <table className="w-full text-sm">
             <thead className="bg-zinc-50 text-zinc-500">
               <tr>
+                {role === "admin" && <th className="w-8" />}
                 <th className="text-left px-4 py-3 font-medium">名称</th>
                 <th className="text-left px-4 py-3 font-medium">分类</th>
                 <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">添加者</th>
@@ -84,7 +129,20 @@ export default function ResourceList() {
                 const cat = catMap.get(r.category);
                 const canEdit = role === "admin" || r.createdBy === "editor";
                 return (
-                  <tr key={r.id} className="hover:bg-zinc-50 transition-colors">
+                  <tr
+                    key={r.id}
+                    draggable={role === "admin"}
+                    onDragStart={() => onDragStart(r.id)}
+                    onDragOver={(e) => onDragOver(e, r.id)}
+                    onDrop={() => onDrop(r.id)}
+                    className="hover:bg-zinc-50 transition-colors"
+                    style={{ cursor: role === "admin" ? "grab" : "default" }}
+                  >
+                    {role === "admin" && (
+                      <td className="pl-3 py-3 text-zinc-300 select-none" style={{ cursor: "grab" }}>
+                        ⋮⋮
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <span className="font-medium text-zinc-900">{r.name}</span>
                     </td>

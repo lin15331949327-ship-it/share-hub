@@ -241,7 +241,7 @@ export default function HomeContent() {
             {recent.length > 0 && (
               <div>
                 <SectionHeading title="最近更新" viewAll />
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {recent.map((r, i) => (
                     <ScrollReveal key={r.id} delay={i * 50}>
                       <ResourceCard resource={r} category={cMap.get(r.category)} />
@@ -263,7 +263,7 @@ export default function HomeContent() {
                     count={items.length}
                     onViewAll={() => selectCat(cat.id)}
                   />
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {shown.map((r, i) => (
                       <ScrollReveal key={r.id} delay={i * 50}>
                         <ResourceCard resource={r} category={cat} />

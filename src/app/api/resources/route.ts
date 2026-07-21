@@ -8,12 +8,12 @@ export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get("category");
   const all = await getAllResources();
   const filtered = category ? all.filter((r) => r.category === category) : all;
-  // stable sort: by category id then by createdAt descending
+  // sort: by displayOrder descending (newest/highest first), then category
   filtered.sort((a, b) => {
-    const catA = a.category || "";
-    const catB = b.category || "";
-    if (catA !== catB) return catA.localeCompare(catB);
-    return b.createdAt - a.createdAt;
+    const oA = a.displayOrder ?? a.createdAt;
+    const oB = b.displayOrder ?? b.createdAt;
+    if (oA !== oB) return oB - oA;
+    return (a.category || "").localeCompare(b.category || "");
   });
   return NextResponse.json(filtered);
 }
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     tags: body.tags || [],
     createdBy: session.role,
     createdAt: Date.now(),
+    displayOrder: Date.now(),
   };
 
   await createResource(resource);

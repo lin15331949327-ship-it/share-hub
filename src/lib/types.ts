@@ -9,6 +9,8 @@ export interface Resource {
   tags: string[];
   createdBy: "admin" | "editor";
   createdAt: number;
+  /** Admin drag-sort order (higher = appears earlier) */
+  displayOrder?: number;
   /** Admin-pinned featured resource for Hero banner */
   featured?: boolean;
 }
