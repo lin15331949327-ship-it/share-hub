@@ -320,14 +320,11 @@ function SectionHeading({ title, count, viewAll, onViewAll }: {
     <div className="flex items-center justify-between mb-4">
       <h2 className="font-bold tracking-tight" style={{ fontSize: "var(--text-lg)", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>
         {title}
-        {count !== undefined && (
-          <span className="ml-2 font-normal" style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>({count})</span>
-        )}
       </h2>
       {(viewAll || onViewAll) && (
         <button onClick={onViewAll} className="text-xs font-medium transition-colors"
           style={{ color: "var(--color-text-muted)" }}>
-          查看全部 &rarr;
+          查看全部{count !== undefined ? ` (${count})` : ""} &rarr;
         </button>
       )}
     </div>
