@@ -119,8 +119,8 @@ export default function MobileLayout({
                 onBlur={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "none"; }}
               />
             </div>
-            <p className="mt-3 text-xs" style={{ color: T.muted, paddingLeft: 4 }}>
-              Search AI tools, websites, tutorials…
+            <p className="mt-3 text-xs text-balance" style={{ color: T.muted, paddingLeft: 4 }}>
+              搜索工具、网站、教程…
             </p>
           </div>
           <div className="px-5 pt-4 space-y-2">
@@ -235,22 +235,14 @@ function GreetingHeader({ onLogout }: { onLogout: () => void }) {
         <h1 className="text-2xl font-bold tracking-tight mt-0.5" style={{ fontFamily: "var(--font-display)" }}>
           ShareHub
         </h1>
-        <p className="text-[13px] mt-1" style={{ color: T.soft }}>Discover tools with AI.</p>
+        <p className="text-[13px] mt-1 text-balance" style={{ color: T.soft }}>小圈子，大资源。</p>
       </div>
-      <div className="flex items-center gap-3">
-        <button className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
-          style={{ background: T.surface, border: `1px solid ${T.border}` }}>
-          <svg className="w-4 h-4" style={{ color: T.soft }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-          </svg>
-        </button>
-        <button onClick={onLogout}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all active:scale-90"
-          style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})`, border: "none", cursor: "pointer" }}
-          title="退出登录">
-          S
-        </button>
-      </div>
+      <button onClick={onLogout}
+        className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all active:scale-90"
+        style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})`, border: "none", cursor: "pointer" }}
+        title="退出登录">
+        S
+      </button>
     </div>
   );
 }
@@ -279,8 +271,8 @@ function AISearch({ value, onChange, onFocus }: { value: string; onChange: (v: s
           </span>
         </div>
       </div>
-      <p className="mt-2 text-xs" style={{ color: T.muted, paddingLeft: 4 }}>
-        Search AI tools, websites, tutorials…
+      <p className="mt-2 text-xs text-balance" style={{ color: T.muted, paddingLeft: 4 }}>
+        搜索工具、网站、教程…
       </p>
     </div>
   );
@@ -309,42 +301,40 @@ function FeaturedCard({ resource, category }: { resource: Resource; category?: C
             Today&apos;s Pick
           </span>
 
-          <div className="flex items-start gap-4">
+          <div className="flex items-center gap-4">
+            {/* Icon — smaller, left-aligned */}
+            <div className="shrink-0 relative">
+              <div className="absolute inset-0 rounded-2xl blur-lg opacity-25"
+                style={{ background: T.accent }} />
+              <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden"
+                style={{ background: "rgba(59,130,246,0.15)", border: `1px solid rgba(255,255,255,0.12)`, boxShadow: `0 0 20px ${T.accentGlow}` }}>
+                <FaviconLarge link={resource.link} fallback={category?.icon || "📦"} />
+              </div>
+            </div>
+
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold leading-tight mb-1.5" style={{ fontFamily: "var(--font-display)" }}>
+              <h2 className="text-lg font-bold leading-tight mb-1" style={{ fontFamily: "var(--font-display)" }}>
                 {resource.name}
               </h2>
               {desc && (
-                <p className="text-sm leading-relaxed line-clamp-2" style={{ color: T.soft }}>{desc}</p>
+                <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: T.soft }}>{desc}</p>
               )}
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-2.5 mt-3">
                 <a href={resource.link} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95"
                   style={{ background: "#fff", color: "#09090B" }}
                   onClick={(e) => e.stopPropagation()}>
                   Open
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                   </svg>
                 </a>
                 <Link href={`/resource/${resource.id}`}
-                  className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                  className="inline-flex items-center px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95"
                   style={{ background: "rgba(255,255,255,0.06)", color: T.text }}
                   onClick={(e) => e.stopPropagation()}>
-                  AI Summary
+                  Details
                 </Link>
-              </div>
-            </div>
-
-            {/* Floating icon */}
-            <div className="shrink-0 relative">
-              <div className="absolute inset-0 rounded-2xl blur-xl opacity-30"
-                style={{ background: T.accent }} />
-              <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden"
-                style={{ background: "rgba(59,130,246,0.15)", border: `1px solid rgba(255,255,255,0.15)`, boxShadow: `0 0 30px ${T.accentGlow}` }}>
-                <span className="text-3xl" style={{ filter: "drop-shadow(0 2px 8px rgba(59,130,246,0.4))" }}>
-                  <FaviconLarge link={resource.link} fallback={category?.icon || "📦"} />
-                </span>
               </div>
             </div>
           </div>
@@ -550,7 +540,7 @@ function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
   return (
     <img
       src={sources[srcIdx]} alt=""
-      className="w-14 h-14 object-contain"
+      className="w-10 h-10 object-contain"
       loading="lazy"
       onError={() => setSrcIdx((i) => i + 1)}
       onLoad={(e) => {
