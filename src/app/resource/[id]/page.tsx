@@ -27,7 +27,7 @@ export default async function ResourcePage({
         href={resource.category ? `/?cat=${resource.category}` : "/"}
         className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors mb-6 inline-block"
       >
-        ← 返回首页
+        ← {category ? `返回${category.name}` : "返回首页"}
       </Link>
 
       <article className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-8 shadow-sm">
