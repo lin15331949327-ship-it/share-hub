@@ -139,9 +139,25 @@ export default function Navbar() {
   function handleClick(e: React.MouseEvent) {
     if (moved.current) return;
     if (collapsed) {
-      setCollapsed(false);
+      // Expand in place — shift position so full navbar fits on screen
       const el = navRef.current;
-      if (el) persist(el, false, "top");
+      if (el) {
+        el.style.transition = "all 400ms var(--ease-spring)";
+        const top = parseInt(el.style.top || "16");
+        if (snapEdge === "right") {
+          el.style.left = Math.max(0, window.innerWidth - 440) + "px";
+        } else if (snapEdge === "left") {
+          el.style.left = "8px";
+        } else {
+          // top — keep horizontal position but ensure it fits
+          const left = parseInt(el.style.left || "0");
+          el.style.left = Math.max(8, Math.min(left, window.innerWidth - 440)) + "px";
+        }
+        el.style.top = Math.max(4, Math.min(top, window.innerHeight - 48)) + "px";
+      }
+      setCollapsed(false);
+      setSnapEdge("top"); // reset edge preference
+      if (el) setTimeout(() => persist(el, false, "top"), 50);
     }
   }
 
