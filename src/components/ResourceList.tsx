@@ -32,6 +32,17 @@ export default function ResourceList() {
     router.refresh();
   }
 
+  async function toggleFeatured(id: string, current: boolean) {
+    await fetch(`/api/resources/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ featured: !current }),
+    });
+    setResources((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, featured: !current } : r))
+    );
+  }
+
   if (loading) {
     return <p className="text-zinc-400 text-sm">加载中...</p>;
   }
@@ -64,6 +75,7 @@ export default function ResourceList() {
                 <th className="text-left px-4 py-3 font-medium">名称</th>
                 <th className="text-left px-4 py-3 font-medium">分类</th>
                 <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">添加者</th>
+                {role === "admin" && <th className="text-center px-2 py-3 font-medium w-12">推荐</th>}
                 <th className="text-right px-4 py-3 font-medium">操作</th>
               </tr>
             </thead>
@@ -80,8 +92,20 @@ export default function ResourceList() {
                       {cat ? `${cat.icon} ${cat.name}` : r.category}
                     </td>
                     <td className="px-4 py-3 text-zinc-400 hidden sm:table-cell">
-                      {r.createdBy === "admin" ? "👤 管理员" : "✏️ 编辑者"}
+                      {r.createdBy === "admin" ? "管理员" : "编辑者"}
                     </td>
+                    {role === "admin" && (
+                      <td className="px-2 py-3 text-center">
+                        <button
+                          onClick={() => toggleFeatured(r.id, !!r.featured)}
+                          title={r.featured ? "取消推荐" : "设为推荐"}
+                          className="text-lg transition-colors"
+                          style={{ color: r.featured ? "#2563eb" : "var(--color-text-muted)" }}
+                        >
+                          {r.featured ? "★" : "☆"}
+                        </button>
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-right">
                       {canEdit && (
                         <>

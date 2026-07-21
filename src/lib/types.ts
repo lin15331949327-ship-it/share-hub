@@ -7,6 +7,8 @@ export interface Resource {
   tags: string[];
   createdBy: "admin" | "editor";
   createdAt: number;
+  /** Admin-pinned featured resource for Hero banner */
+  featured?: boolean;
 }
 
 export interface Category {

@@ -64,9 +64,33 @@ export async function DELETE(
   const { id } = await params;
   const resource = await getResource(id);
   if (resource) {
-    // Delete R2 files referenced in description
     await deleteR2Files(resource.description);
   }
   await deleteResource(id);
   return NextResponse.json({ ok: true });
+}
+
+// PATCH /api/resources/[id] — toggle featured (admin only)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    return NextResponse.json({ error: "Admin only" }, { status: 403 });
+  }
+
+  const { id } = await params;
+  const resource = await getResource(id);
+  if (!resource) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const body = await req.json();
+  if (typeof body.featured === "boolean") {
+    resource.featured = body.featured;
+  }
+
+  await updateResource(resource);
+  return NextResponse.json(resource);
 }

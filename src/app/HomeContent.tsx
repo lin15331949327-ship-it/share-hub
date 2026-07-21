@@ -64,7 +64,8 @@ export default function HomeContent() {
     return list;
   }, [resources, categories, activeCategory, search]);
 
-  const featured = display[0];
+  // Hero: prefer admin-pinned featured resource, fallback to first
+  const featured = display.find((r) => r.featured) || display[0];
   const isHome = !activeCategory && !search;
 
   function selectCat(id: string | null) {
@@ -366,17 +367,18 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
   );
 }
 
-/* ---- Resource Card — Double-Bezel ---- */
+/* ---- Resource Card — Double-Bezel, taller with more info ---- */
 function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
+  const tags = Array.isArray(resource.tags) ? resource.tags : [];
+  const date = new Date(resource.createdAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+
   return (
     <Link href={`/resource/${resource.id}`} className="block group" style={{ textDecoration: "none" }}>
-      {/* Outer shell */}
       <div className="rounded-[var(--radius-xl)] p-[1px] transition-all" style={{
         background: "var(--color-border)",
         transition: "all 300ms var(--ease-spring)",
       }}>
-        {/* Inner core */}
-        <div className="flex items-center gap-4 p-4 rounded-[calc(var(--radius-xl)-1px)] transition-all"
+        <div className="p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all"
           style={{
             background: "#fff",
             border: "1px solid transparent",
@@ -400,24 +402,56 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
             }
           }}
         >
-          <div className="shrink-0 w-10 h-10 rounded-[var(--radius-md)] flex items-center justify-center text-lg select-none"
-            style={{ background: "var(--color-paper-2)" }}>
-            {category?.icon || "📦"}
+          {/* Header: icon + title + category badge */}
+          <div className="flex items-start gap-3 mb-3">
+            <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center text-xl select-none"
+              style={{ background: "var(--color-paper-2)" }}>
+              {category?.icon || "📦"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold truncate" style={{
+                  fontSize: "15px", color: "var(--color-text)", fontFamily: "var(--font-body)",
+                }}>
+                  {resource.name}
+                </h3>
+                {resource.featured && (
+                  <span className="shrink-0 text-xs" style={{ color: "var(--color-accent)" }}>★</span>
+                )}
+              </div>
+              {category && (
+                <span className="inline-block mt-0.5 text-xs" style={{ color: "var(--color-text-muted)" }}>
+                  {category.name}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium truncate" style={{
-              fontSize: "var(--text-sm)", color: "var(--color-text)", fontFamily: "var(--font-body)", fontWeight: 600,
+
+          {/* Description */}
+          {resource.description && (
+            <p className="line-clamp-2 mb-3 leading-relaxed" style={{
+              fontSize: "var(--text-sm)", color: "var(--color-text-soft)",
             }}>
-              {resource.name}
-            </h3>
-            <p className="line-clamp-1 mt-0.5" style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-              {resource.description ? stripHtml(resource.description) : new Date(resource.createdAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric" })}
+              {stripHtml(resource.description)}
             </p>
+          )}
+
+          {/* Tags + date footer */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-1.5 min-w-0">
+              {tags.slice(0, 3).map((tag, i) => (
+                <span key={i} className="text-xs px-2 py-0.5 rounded-md" style={{
+                  background: "var(--color-paper-2)", color: "var(--color-text-muted)",
+                }}>
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 3 && (
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>+{tags.length - 3}</span>
+              )}
+            </div>
+            <span className="shrink-0 text-xs" style={{ color: "var(--color-text-muted)" }}>{date}</span>
           </div>
-          <svg className="shrink-0 w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-[var(--dur-normal)]" style={{ color: "var(--color-text-muted)", transform: "translateX(-4px)" }}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
         </div>
       </div>
     </Link>
