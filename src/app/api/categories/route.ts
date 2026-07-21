@@ -43,7 +43,7 @@ export async function PUT(req: NextRequest) {
   if (err) return err;
 
   const body = await req.json();
-  const { id, name, icon, order } = body;
+  const { id, name, icon, order, isCatchAll, sortWeight } = body;
   const cats = await getAllCategories();
   const idx = cats.findIndex((c) => c.id === id);
   if (idx === -1) {
@@ -52,6 +52,8 @@ export async function PUT(req: NextRequest) {
   if (name !== undefined) cats[idx].name = name;
   if (icon !== undefined) cats[idx].icon = icon;
   if (order !== undefined) cats[idx].order = order;
+  if (isCatchAll !== undefined) cats[idx].isCatchAll = isCatchAll;
+  if (sortWeight !== undefined) cats[idx].sortWeight = sortWeight;
   cats.sort((a, b) => a.order - b.order);
   await setCategories(cats);
   return NextResponse.json(cats[idx]);

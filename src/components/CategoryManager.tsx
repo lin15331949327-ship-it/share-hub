@@ -21,7 +21,7 @@ export default function CategoryManager({ onUpdate }: Props) {
     setLoading(false);
   }
 
-  async function persist(id: string, field: string, value: string) {
+  async function persist(id: string, field: string, value: string | boolean) {
     await fetch("/api/categories", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -80,6 +80,15 @@ export default function CategoryManager({ onUpdate }: Props) {
               }}
               className="flex-1 px-3 py-1.5 rounded border border-transparent hover:border-zinc-200 focus:border-zinc-400 outline-none text-sm"
             />
+            <label className="flex items-center gap-1 text-xs cursor-pointer shrink-0" style={{ color: "var(--color-text-muted)" }}>
+              <input
+                type="checkbox"
+                defaultChecked={!!cat.isCatchAll}
+                onChange={(e) => persist(cat.id, "isCatchAll", e.target.checked)}
+                className="w-3.5 h-3.5 rounded accent-[#2563eb] cursor-pointer"
+              />
+              杂项
+            </label>
             <button
               onClick={() => remove(cat.id, cat.name)}
               className="text-red-400 hover:text-red-600 text-sm transition-colors shrink-0"
