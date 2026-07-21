@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
-import ImageExtension from "@tiptap/extension-image";
+import { ResizableImage } from "@/lib/resizableImageExtension";
 import { VideoExtension } from "@/lib/videoExtension";
 import { parseVideoLink } from "@/lib/embed";
 import { useUpload, buildInsertHtml } from "@/hooks/useUpload";
@@ -35,7 +35,7 @@ export default function ResourceForm({ categories, resource }: Props) {
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       LinkExtension.configure({ openOnClick: false }),
-      ImageExtension.configure({ allowBase64: false }),
+      ResizableImage.configure({ allowBase64: false }),
       VideoExtension,
     ],
     content: resource?.description || "",

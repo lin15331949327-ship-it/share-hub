@@ -22,12 +22,24 @@ body::after {
 
 /* TipTap editor */
 .ProseMirror { min-height: 150px; outline: none !important; }
-.ProseMirror img,
-.ProseMirror video {
-  max-width: 100%;
+/* Resizable media wrapper */
+.media-resizable {
+  display: inline-block;
+  position: relative;
   resize: both;
-  overflow: auto;
-  cursor: nwse-resize;
+  overflow: hidden;
+  min-width: 80px;
+  min-height: 40px;
+  max-width: 100%;
+  border-radius: 6px;
+}
+.media-resizable img,
+.media-resizable video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
 }
 .ProseMirror p { margin-bottom: 0.5rem; }
 .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
