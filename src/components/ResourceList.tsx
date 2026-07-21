@@ -74,17 +74,16 @@ export default function ResourceList() {
     });
     setResources(reordered);
 
-    // persist all items that shifted position (moved item + everything between fromIdx and toIdx)
-    const start = Math.min(fromIdx, toIdx);
-    const end = Math.max(fromIdx, toIdx);
-    for (let i = start; i <= end; i++) {
-      const r = reordered[i];
-      await fetch(`/api/resources/${r.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayOrder: r.displayOrder }),
-      });
-    }
+    // persist ALL items — every position gets a new displayOrder
+    await Promise.all(
+      reordered.map((r) =>
+        fetch(`/api/resources/${r.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayOrder: r.displayOrder }),
+        })
+      )
+    );
   }
 
   if (loading) {
