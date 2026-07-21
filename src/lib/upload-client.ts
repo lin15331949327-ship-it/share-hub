@@ -1,11 +1,12 @@
 /**
  * Client-side upload to Cloudflare Worker.
- * Simple upload ≤50MB. Multipart >50MB (no size limit, 10MB chunks + retry).
+ * Simple upload ≤50MB. Multipart >50MB (no size limit, 10MB chunks, 3x parallel + retry).
  */
 
 const WORKER = process.env.NEXT_PUBLIC_UPLOAD_WORKER || "https://share-hub-upload.lin15331949327.workers.dev";
-const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB — keeps Worker under timeout on typical uplinks
+const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_RETRIES = 3;
+const CONCURRENCY = 3; // parallel chunk uploads
 
 async function fetchWithRetry(url: string, init: RequestInit, retries = MAX_RETRIES): Promise<Response> {
   let lastErr: unknown;
@@ -16,7 +17,6 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = MAX_RETR
     } catch (e) {
       lastErr = e;
       if (i < retries - 1) {
-        // exponential backoff: 1s, 2s, 4s
         await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, i)));
       }
     }
@@ -58,6 +58,22 @@ async function simpleUpload(file: File): Promise<string> {
   return url;
 }
 
+/** Upload a single chunk, returning { etag, partNumber } */
+async function uploadPart(
+  key: string,
+  uploadId: string,
+  partNumber: number,
+  chunk: Blob
+): Promise<{ etag: string; partNumber: number }> {
+  const partRes = await fetchWithRetry(
+    `${WORKER}/mp/part?key=${encodeURIComponent(key)}&uploadId=${uploadId}&part=${partNumber}`,
+    { method: "POST", body: chunk }
+  );
+  if (!partRes.ok) throw new Error(`分片 ${partNumber} 上传失败`);
+  const { etag } = await partRes.json();
+  return { etag, partNumber };
+}
+
 async function multipartUpload(
   file: File,
   onProgress: (p: UploadProgress) => void
@@ -65,6 +81,7 @@ async function multipartUpload(
   const ct = encodeURIComponent(getContentType(file));
   const totalParts = Math.ceil(file.size / CHUNK_SIZE);
 
+  // 1) start multipart session
   const startRes = await fetchWithRetry(
     `${WORKER}/mp/start?filename=${encodeURIComponent(file.name)}&ct=${ct}`,
     { method: "POST" }
@@ -72,23 +89,34 @@ async function multipartUpload(
   if (!startRes.ok) throw new Error("创建分片上传失败");
   const { uploadId, key } = await startRes.json();
 
+  // 2) upload parts with concurrency limit
   const parts: { etag: string; partNumber: number }[] = [];
-  for (let i = 0; i < totalParts; i++) {
-    const start = i * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, file.size);
-    const chunk = file.slice(start, end);
-    onProgress({ current: i + 1, total: totalParts + 1 });
+  let done = 0;
+  let next = 0;
 
-    const partRes = await fetchWithRetry(
-      `${WORKER}/mp/part?key=${encodeURIComponent(key)}&uploadId=${uploadId}&part=${i + 1}`,
-      { method: "POST", body: chunk }
-    );
-    if (!partRes.ok) throw new Error(`分片 ${i + 1}/${totalParts} 上传失败`);
-    const { etag } = await partRes.json();
-    parts.push({ etag, partNumber: i + 1 });
+  async function worker() {
+    while (next < totalParts) {
+      const i = next++;
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+      const partNumber = i + 1;
+
+      const result = await uploadPart(key, uploadId, partNumber, chunk);
+      parts.push(result);
+      done++;
+      onProgress({ current: done, total: totalParts + 1 });
+    }
   }
 
+  // launch CONCURRENCY workers
+  const workers = Array.from({ length: Math.min(CONCURRENCY, totalParts) }, () => worker());
+  await Promise.all(workers);
+
+  // 3) complete
   onProgress({ current: totalParts + 1, total: totalParts + 1 });
+  parts.sort((a, b) => a.partNumber - b.partNumber);
+
   const doneRes = await fetchWithRetry(
     `${WORKER}/mp/complete?key=${encodeURIComponent(key)}&uploadId=${uploadId}`,
     {
