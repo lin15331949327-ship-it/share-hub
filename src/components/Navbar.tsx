@@ -15,6 +15,21 @@ export default function Navbar() {
 
   useEffect(() => { fetch("/api/auth").then((r) => r.json()).then((d) => setRole(d.role)); }, [pathname]);
 
+  /* Restore saved position on mount */
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    try {
+      const raw = localStorage.getItem("sh-nav-pos");
+      if (raw) {
+        const { left, top } = JSON.parse(raw);
+        el.style.left = left + "px";
+        el.style.top = top + "px";
+        el.style.transform = "none";
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     setHidden(new URLSearchParams(window.location.search).get("view") === "mobile");
   }, [pathname]);
@@ -45,10 +60,18 @@ export default function Navbar() {
   }, []);
 
   const onPointerUp = useCallback(() => {
-    if (!navRef.current) return;
+    const el = navRef.current;
+    if (!el) return;
     dragging.current = false;
-    navRef.current.style.cursor = "grab";
-    navRef.current.style.transition = "all 300ms var(--ease-spring)";
+    el.style.cursor = "grab";
+    el.style.transition = "all 300ms var(--ease-spring)";
+    /* persist position */
+    try {
+      localStorage.setItem("sh-nav-pos", JSON.stringify({
+        left: parseInt(el.style.left) || 0,
+        top: parseInt(el.style.top) || 0,
+      }));
+    } catch { /* ignore */ }
   }, []);
 
   if (hidden) return null;

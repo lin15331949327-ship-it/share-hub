@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useHomeData, FaviconIcon, HeroFavicon, ScrollReveal, SectionHeading, Empty, stripHtml } from "./HomeShared";
@@ -40,29 +40,8 @@ export default function HomeContent() {
         <DesktopView data={data} />
       )}
 
-      {/* Mode switch button */}
-      <button
-        onClick={() => {
-          const url = new URL(window.location.href);
-          url.searchParams.set("view", isMobile ? "desktop" : "mobile");
-          window.location.href = url.toString();
-        }}
-        className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95"
-        style={{
-          background: isMobile ? "#06B6D4" : "var(--color-accent)",
-          color: "#fff",
-          border: "none",
-          cursor: "pointer",
-        }}
-        title={isMobile ? "切换桌面版" : "切换手机版"}>
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          {isMobile ? (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          )}
-        </svg>
-      </button>
+      {/* Draggable mode switch */}
+      <DraggableToggle isMobile={isMobile} />
     </>
   );
 }
@@ -262,5 +241,107 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
         </div>
       </div>
     </Link>
+  );
+}
+
+/* ═══ Draggable mode switch button ═══ */
+function DraggableToggle({ isMobile }: { isMobile: boolean }) {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dragging = useRef(false);
+  const moved = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+
+  /* Restore saved position */
+  useEffect(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    try {
+      const raw = localStorage.getItem("sh-toggle-pos");
+      if (raw) {
+        const { left, top } = JSON.parse(raw);
+        el.style.left = left + "px";
+        el.style.top = top + "px";
+        el.style.right = "auto";
+        el.style.bottom = "auto";
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const el = btnRef.current;
+    if (!el) return;
+    dragging.current = true;
+    moved.current = false;
+    const rect = el.getBoundingClientRect();
+    offset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    el.style.transition = "none";
+    el.style.right = "auto";
+    el.style.bottom = "auto";
+    el.style.left = rect.left + "px";
+    el.style.top = rect.top + "px";
+    el.setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current || !btnRef.current) return;
+    const x = e.clientX - offset.current.x;
+    const y = e.clientY - offset.current.y;
+    if (Math.abs(x - parseInt(btnRef.current.style.left || "0")) > 3 ||
+        Math.abs(y - parseInt(btnRef.current.style.top || "0")) > 3) {
+      moved.current = true;
+    }
+    const w = btnRef.current.offsetWidth;
+    const h = btnRef.current.offsetHeight;
+    btnRef.current.style.left = Math.max(0, Math.min(x, window.innerWidth - w)) + "px";
+    btnRef.current.style.top = Math.max(0, Math.min(y, window.innerHeight - h)) + "px";
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    dragging.current = false;
+    el.style.transition = "all 300ms var(--ease-spring)";
+    if (moved.current) {
+      try {
+        localStorage.setItem("sh-toggle-pos", JSON.stringify({
+          left: parseInt(el.style.left) || 0,
+          top: parseInt(el.style.top) || 0,
+        }));
+      } catch { /* ignore */ }
+    }
+  }, []);
+
+  function toggle() {
+    if (moved.current) return; // was a drag, not a click
+    const url = new URL(window.location.href);
+    url.searchParams.set("view", isMobile ? "desktop" : "mobile");
+    window.location.href = url.toString();
+  }
+
+  return (
+    <button
+      ref={btnRef}
+      onClick={toggle}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95"
+      style={{
+        background: isMobile ? "#06B6D4" : "var(--color-accent)",
+        color: "#fff",
+        border: "none",
+        cursor: "grab",
+        touchAction: "none",
+      }}
+      title={isMobile ? "拖拽移动 / 点击切换桌面版" : "拖拽移动 / 点击切换手机版"}>
+      <svg className="w-5 h-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        {isMobile ? (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        )}
+      </svg>
+    </button>
   );
 }

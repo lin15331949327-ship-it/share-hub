@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { stripHtml } from "./HomeShared";
+import { getFaviconSources } from "@/lib/favicon";
 import type { Resource, Category } from "@/lib/types";
 
 interface Props {
@@ -526,23 +527,21 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
 
 /* ═══ FAVICON ═══ */
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
-  const [ok, setOk] = useState(true);
-  let hostname = "";
-  try { hostname = new URL(link).hostname; } catch { return <span className="text-base">{fallback}</span>; }
-  if (!ok) return <span className="text-base">{fallback}</span>;
+  const sources = getFaviconSources(link);
+  const [srcIdx, setSrcIdx] = useState(0);
+  if (sources.length === 0 || srcIdx >= sources.length) return <span className="text-base">{fallback}</span>;
   return (
-    <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`} alt={alt}
-      className="w-5 h-5 object-contain" loading="lazy" onError={() => setOk(false)} />
+    <img src={sources[srcIdx]} alt={alt}
+      className="w-5 h-5 object-contain" loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
   );
 }
 
 function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
-  const [ok, setOk] = useState(true);
-  let hostname = "";
-  try { hostname = new URL(link).hostname; } catch { return <span className="text-4xl">{fallback}</span>; }
-  if (!ok) return <span className="text-4xl">{fallback}</span>;
+  const sources = getFaviconSources(link);
+  const [srcIdx, setSrcIdx] = useState(0);
+  if (sources.length === 0 || srcIdx >= sources.length) return <span className="text-4xl">{fallback}</span>;
   return (
-    <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=128`} alt=""
-      className="w-12 h-12 object-contain" loading="lazy" onError={() => setOk(false)} />
+    <img src={sources[srcIdx]} alt=""
+      className="w-12 h-12 object-contain" loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
   );
 }
