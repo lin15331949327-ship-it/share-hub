@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
   const resource: Resource = {
     id: crypto.randomUUID(),
     name: body.name,
+    subtitle: body.subtitle || "",
     description: body.description || "",
     link: body.link,
     category: body.category,

@@ -41,6 +41,7 @@ export async function PUT(
   const updated = {
     ...existing,
     name: body.name ?? existing.name,
+    subtitle: body.subtitle ?? existing.subtitle,
     description: body.description ?? existing.description,
     link: body.link ?? existing.link,
     category: body.category ?? existing.category,

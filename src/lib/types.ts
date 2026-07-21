@@ -1,6 +1,8 @@
 export interface Resource {
   id: string;
   name: string;
+  /** One-line subtitle shown under the name on cards */
+  subtitle?: string;
   description: string;
   link: string;
   category: string;

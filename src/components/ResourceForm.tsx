@@ -19,6 +19,7 @@ interface Props {
 export default function ResourceForm({ categories, resource }: Props) {
   const router = useRouter();
   const [name, setName] = useState(resource?.name || "");
+  const [subtitle, setSubtitle] = useState(resource?.subtitle || "");
   const [link, setLink] = useState(resource?.link || "");
   const [category, setCategory] = useState(resource?.category || categories[0]?.id || "");
   const [tags, setTags] = useState(resource?.tags?.join(", ") || "");
@@ -78,6 +79,7 @@ export default function ResourceForm({ categories, resource }: Props) {
 
     const body = {
       name: name.trim(),
+      subtitle: subtitle.trim(),
       link: link.trim(),
       category,
       description: editor?.getHTML() || "",
@@ -141,6 +143,16 @@ export default function ResourceForm({ categories, resource }: Props) {
           onChange={(e) => setName(e.target.value)}
           className="w-full px-4 py-2.5 rounded-lg border border-zinc-300 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-100 outline-none transition-all"
           placeholder="IDM 破解版 v6.42"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-zinc-700 mb-1.5">一句话描述 <span className="font-normal text-zinc-400">(卡片小字)</span></label>
+        <input
+          value={subtitle}
+          onChange={(e) => setSubtitle(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-lg border border-zinc-300 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-100 outline-none transition-all"
+          placeholder="最好用的 AI API 聚合平台"
         />
       </div>
 

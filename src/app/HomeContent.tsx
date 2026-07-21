@@ -136,8 +136,12 @@ export default function HomeContent() {
                 <div className="relative z-10 flex items-center h-full gap-8" style={{ minHeight: "204px" }}>
                   <div className="flex-1" style={{ maxWidth: "58%" }}>
                     <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase mb-5" style={{ background: "var(--color-accent)", color: "#fff" }}>今日推荐</span>
-                    <h2 className="tracking-tight mb-3" style={{ fontSize: "44px", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>{featured.name}</h2>
-                    {featured.description && <p className="mb-8 line-clamp-2" style={{ fontSize: "16px", lineHeight: 1.6, color: "var(--color-text-soft)", maxWidth: "460px" }}>{stripHtml(featured.description)}</p>}
+                    <h2 className="tracking-tight mb-2" style={{ fontSize: "44px", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>{featured.name}</h2>
+                    {(featured.subtitle || featured.description) && (
+                      <p className="mb-8 line-clamp-2" style={{ fontSize: "16px", lineHeight: 1.6, color: "var(--color-text-soft)", maxWidth: "460px" }}>
+                        {featured.subtitle || stripHtml(featured.description)}
+                      </p>
+                    )}
                     <div className="flex gap-3">
                       <a href={featured.link} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all"
                         style={{ background: "var(--color-accent)", color: "#fff", transition: "transform 200ms var(--ease-spring), box-shadow 200ms var(--ease-spring)" }}
@@ -267,15 +271,14 @@ function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallb
 
 function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
   const tags = Array.isArray(resource.tags) ? resource.tags : [];
-  const date = new Date(resource.createdAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
   const desc = resource.description ? stripHtml(resource.description) : "";
 
   return (
     <Link href={`/resource/${resource.id}`} className="block group" style={{ textDecoration: "none" }}>
       <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
         style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}>
-        <div className="flex flex-col h-full p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all"
-          style={{ background: "#fff", boxShadow: "var(--shadow-sm)", transition: "all 300ms var(--ease-spring)" }}
+        <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all"
+          style={{ background: "#fff", boxShadow: "var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "180px" }}
           onMouseEnter={(e) => {
             const p = e.currentTarget.parentElement;
             if (p) { p.style.background = "var(--color-accent-ring)"; p.style.transform = "translateY(-2px)"; p.style.boxShadow = "var(--shadow-card-hover)"; }
@@ -285,8 +288,8 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
             if (p) { p.style.background = "var(--color-border)"; p.style.transform = "translateY(0)"; p.style.boxShadow = "none"; }
           }}>
 
-          {/* Row 1: favicon + title + featured star */}
-          <div className="flex items-start gap-3 mb-2">
+          {/* Header: icon + title + subtitle */}
+          <div className="flex items-start gap-3 mb-2.5">
             <FaviconIcon link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
             <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center gap-1.5">
@@ -295,13 +298,13 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
                 </h3>
                 {resource.featured && <span className="shrink-0" style={{ color: "var(--color-accent)", fontSize: "13px" }}>★</span>}
               </div>
-              <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>
-                {category?.name || ""}{category?.name && " · "}{date}
+              <p className="text-xs mt-0.5 truncate" style={{ color: "var(--color-text-muted)" }}>
+                {resource.subtitle || ""}
               </p>
             </div>
           </div>
 
-          {/* Row 2: description — always 2 lines reserved */}
+          {/* Description — always 2 lines */}
           <div className="flex-1 mb-3">
             {desc ? (
               <p className="line-clamp-2 leading-relaxed" style={{ fontSize: "var(--text-sm)", color: "var(--color-text-soft)" }}>
@@ -315,26 +318,21 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
             )}
           </div>
 
-          {/* Row 3: tags */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-1.5 min-w-0">
-              {tags.length > 0 ? (
-                <>
-                  {tags.slice(0, 3).map((tag, i) => (
-                    <span key={i} className="text-xs px-2 py-0.5 rounded-md" style={{ background: "var(--color-paper-2)", color: "var(--color-text-muted)" }}>
-                      {tag}
-                    </span>
-                  ))}
-                  {tags.length > 3 && <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>+{tags.length - 3}</span>}
-                </>
-              ) : (
-                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{date}</span>
-              )}
-            </div>
-            <svg className="shrink-0 w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" style={{ color: "var(--color-text-muted)", transform: "translateX(-4px)", transition: "all 200ms var(--ease-spring)" }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Footer: category chip + tags */}
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {category && (
+              <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--color-accent-glow)", color: "var(--color-accent)" }}>
+                {category.name}
+              </span>
+            )}
+            {tags.slice(0, 4 - (category ? 1 : 0)).map((tag, i) => (
+              <span key={i} className="text-xs px-2 py-0.5 rounded-md" style={{ background: "var(--color-paper-2)", color: "var(--color-text-muted)" }}>
+                {tag}
+              </span>
+            ))}
+            {tags.length > (category ? 3 : 4) && (
+              <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>+{tags.length - (category ? 3 : 4)}</span>
+            )}
           </div>
         </div>
       </div>
