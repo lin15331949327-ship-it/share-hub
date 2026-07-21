@@ -152,9 +152,11 @@ export default function MobileLayout({
         <div className="relative z-10 px-5 pt-4">
           {/* Avatar */}
           <div className="flex flex-col items-center py-8">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold"
+            <div className="w-20 h-20 rounded-full flex items-center justify-center"
               style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})` }}>
-              S
+              <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2} style={{ color: "#fff" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+              </svg>
             </div>
             <h2 className="text-lg font-bold mt-4" style={{ fontFamily: "var(--font-display)" }}>ShareHub</h2>
             <p className="text-sm mt-1" style={{ color: T.muted }}>AI-native resource sharing</p>
@@ -241,7 +243,9 @@ function GreetingHeader({ onLogout }: { onLogout: () => void }) {
         className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all active:scale-90"
         style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})`, border: "none", cursor: "pointer" }}
         title="退出登录">
-        S
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+        </svg>
       </button>
     </div>
   );
