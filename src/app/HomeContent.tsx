@@ -226,8 +226,8 @@ export default function HomeContent() {
 
               {/* --- Content --- */}
               <div className="relative z-10 flex items-center gap-8" style={{ padding: "48px", minHeight: "320px" }}>
-                {/* Left: 60% text */}
-                <div style={{ flex: "0 0 60%", maxWidth: "60%" }}>
+                {/* Left: text */}
+                <div style={{ flex: "1 1 0%", maxWidth: "58%", minWidth: 0 }}>
                   <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase mb-5"
                     style={{ background: "var(--color-accent)", color: "#fff", fontFamily: "var(--font-body)" }}>
                     今日推荐
@@ -291,8 +291,8 @@ export default function HomeContent() {
                   </div>
                 </div>
 
-                {/* Right: 40% icon — generous double-bezel with float */}
-                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 42%", minWidth: 0 }}>
+                {/* Right: icon — double-bezel with float */}
+                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%", minWidth: 0 }}>
                   {/* Outer tray */}
                   <div className="rounded-[20px] p-2"
                     style={{
