@@ -28,11 +28,12 @@ export async function seed() {
     for (const cat of existing) {
       const def = defaults.get(cat.id);
       if (!def) continue;
-      if (def.isCatchAll !== undefined && cat.isCatchAll !== def.isCatchAll) {
+      // one-time backfill only — never overwrite user changes
+      if (cat.isCatchAll === undefined && def.isCatchAll !== undefined) {
         cat.isCatchAll = def.isCatchAll;
         changed = true;
       }
-      if (def.sortWeight !== undefined && cat.sortWeight !== def.sortWeight) {
+      if (cat.sortWeight === undefined && def.sortWeight !== undefined) {
         cat.sortWeight = def.sortWeight;
         changed = true;
       }

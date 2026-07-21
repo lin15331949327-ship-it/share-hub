@@ -22,6 +22,13 @@ body::after {
 
 /* TipTap editor */
 .ProseMirror { min-height: 150px; outline: none !important; }
+.ProseMirror img,
+.ProseMirror video {
+  max-width: 100%;
+  resize: both;
+  overflow: auto;
+  cursor: nwse-resize;
+}
 .ProseMirror p { margin-bottom: 0.5rem; }
 .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
 .ProseMirror h2 { font-size: 1.125rem; }
