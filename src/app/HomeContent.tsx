@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { filterForDisplay, sortForDisplay, catMap } from "@/lib/resources";
-import { getFaviconUrl } from "@/lib/favicon";
+import { getFaviconSources } from "@/lib/favicon";
 import type { Resource, Category } from "@/lib/types";
 
 function getInitialCategory(): string | null {
@@ -237,29 +237,25 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
 /* ====== Favicon with emoji fallback ====== */
 
 function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
-  const favicon = getFaviconUrl(link, 128);
-  const [imgOk, setImgOk] = useState(!!favicon);
-  if (!favicon || !imgOk) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
+  const sources = getFaviconSources(link, 128);
+  const [srcIdx, setSrcIdx] = useState(0);
+  if (sources.length === 0 || srcIdx >= sources.length) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
   return (
-    <img src={favicon} alt="" className="w-20 h-20 object-contain"
-      loading="lazy" onError={() => setImgOk(false)} />
+    <img src={sources[srcIdx]} alt="" className="w-20 h-20 object-contain"
+      loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
   );
 }
 
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
-  const favicon = getFaviconUrl(link);
-  const [imgOk, setImgOk] = useState(!!favicon);
+  const sources = getFaviconSources(link);
+  const [srcIdx, setSrcIdx] = useState(0);
+  const hasSource = sources.length > 0 && srcIdx < sources.length;
   return (
     <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
       style={{ background: "var(--color-paper-2)", overflow: "hidden" }}>
-      {favicon && imgOk ? (
-        <img
-          src={favicon}
-          alt={alt}
-          className="w-7 h-7 object-contain"
-          loading="lazy"
-          onError={() => setImgOk(false)}
-        />
+      {hasSource ? (
+        <img src={sources[srcIdx]} alt={alt} className="w-7 h-7 object-contain"
+          loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
       ) : (
         <span className="text-xl">{fallback}</span>
       )}
