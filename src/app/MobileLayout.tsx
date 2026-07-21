@@ -338,11 +338,13 @@ function FeaturedCard({ resource, category }: { resource: Resource; category?: C
 
             {/* Floating icon */}
             <div className="shrink-0 relative">
-              <div className="absolute inset-0 rounded-2xl blur-xl opacity-40"
+              <div className="absolute inset-0 rounded-2xl blur-xl opacity-30"
                 style={{ background: T.accent }} />
               <div className="relative w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden"
-                style={{ background: "rgba(255,255,255,0.06)", border: `1px solid rgba(255,255,255,0.12)`, boxShadow: `0 0 30px ${T.accentGlow}` }}>
-                <FaviconLarge link={resource.link} fallback={category?.icon || "📦"} />
+                style={{ background: "rgba(59,130,246,0.15)", border: `1px solid rgba(255,255,255,0.15)`, boxShadow: `0 0 30px ${T.accentGlow}` }}>
+                <span className="text-3xl" style={{ filter: "drop-shadow(0 2px 8px rgba(59,130,246,0.4))" }}>
+                  <FaviconLarge link={resource.link} fallback={category?.icon || "📦"} />
+                </span>
               </div>
             </div>
           </div>
@@ -526,19 +528,35 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
-  if (sources.length === 0 || srcIdx >= sources.length) return <span className="text-base">{fallback}</span>;
+  if (sources.length === 0 || srcIdx >= sources.length) return <>{fallback}</>;
   return (
-    <img src={sources[srcIdx]} alt={alt}
-      className="w-5 h-5 object-contain" loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
+    <img
+      src={sources[srcIdx]} alt={alt}
+      className="w-5 h-5 object-contain"
+      loading="lazy"
+      onError={() => setSrcIdx((i) => i + 1)}
+      onLoad={(e) => {
+        const img = e.currentTarget;
+        if (img.naturalWidth < 8 || img.naturalHeight < 8) setSrcIdx((i) => i + 1);
+      }}
+    />
   );
 }
 
 function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
-  if (sources.length === 0 || srcIdx >= sources.length) return <span className="text-4xl">{fallback}</span>;
+  if (sources.length === 0 || srcIdx >= sources.length) return <>{fallback}</>;
   return (
-    <img src={sources[srcIdx]} alt=""
-      className="w-12 h-12 object-contain" loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
+    <img
+      src={sources[srcIdx]} alt=""
+      className="w-14 h-14 object-contain"
+      loading="lazy"
+      onError={() => setSrcIdx((i) => i + 1)}
+      onLoad={(e) => {
+        const img = e.currentTarget;
+        if (img.naturalWidth < 8 || img.naturalHeight < 8) setSrcIdx((i) => i + 1);
+      }}
+    />
   );
 }
