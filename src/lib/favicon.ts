@@ -10,9 +10,10 @@ export function getFaviconSources(link: string): string[] {
     const url = new URL(link);
     const domain = url.hostname;
     return [
-      `${url.origin}/favicon.ico`,                                          // direct — fastest, no GFW
-      `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,         // Google proxy
-      `https://icons.duckduckgo.com/ip3/${domain}.ico`,                    // DDG proxy
+      `/api/favicon?domain=${domain}`,                                       // server proxy — outside GFW
+      `${url.origin}/favicon.ico`,                                           // direct fallback
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,         // Google (client-side fallback)
+      `https://icons.duckduckgo.com/ip3/${domain}.ico`,                    // DDG (client-side fallback)
     ];
   } catch {
     return [];
