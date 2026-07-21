@@ -4,13 +4,15 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
-const SNAP = 60; // px from edge to trigger snap
+const SNAP = 60;
+const NAV_W = 420; // approximate expanded width for edge calculation
 
 export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const [hidden, setHidden] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [snapEdge, setSnapEdge] = useState<"left" | "right" | "top">("top");
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
@@ -22,43 +24,19 @@ export default function Navbar() {
 
   /* Restore saved state on mount */
   useEffect(() => {
-    const el = navRef.current;
-    if (!el) return;
     try {
       const raw = localStorage.getItem("sh-nav-pos");
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data.collapsed) {
-          setCollapsed(true);
-          setSnapEdge(data.edge || "top");
-        }
-        if (data.left !== undefined) {
-          el.style.left = data.left + "px";
-          el.style.top = data.top + "px";
-          el.style.transform = "none";
-        }
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.left !== undefined && data.top !== undefined) {
+        setPos({ left: data.left, top: data.top });
+      }
+      if (data.collapsed) {
+        setCollapsed(true);
+        setSnapEdge(data.edge || "top");
       }
     } catch { /* ignore */ }
   }, []);
-
-  /* Apply collapsed position */
-  useEffect(() => {
-    const el = navRef.current;
-    if (!el || !collapsed) return;
-    const top = parseInt(el.style.top || "16");
-    el.style.transition = "all 400ms var(--ease-spring)";
-    el.style.transform = "none";
-    if (snapEdge === "left") {
-      el.style.left = "4px";
-      el.style.top = Math.max(4, Math.min(top, window.innerHeight - 48)) + "px";
-    } else if (snapEdge === "right") {
-      el.style.left = (window.innerWidth - 44) + "px";
-      el.style.top = Math.max(4, Math.min(top, window.innerHeight - 48)) + "px";
-    } else {
-      el.style.left = Math.max(0, Math.min(parseInt(el.style.left || "0"), window.innerWidth - 44)) + "px";
-      el.style.top = "4px";
-    }
-  }, [collapsed, snapEdge]);
 
   useEffect(() => {
     setHidden(new URLSearchParams(window.location.search).get("view") === "mobile");
@@ -66,14 +44,9 @@ export default function Navbar() {
 
   /* ── ALL hooks above this line ── */
 
-  function persist(el: HTMLDivElement, col: boolean, edge: string) {
+  function persist(left: number, top: number, col: boolean, edge: string) {
     try {
-      localStorage.setItem("sh-nav-pos", JSON.stringify({
-        left: parseInt(el.style.left) || 0,
-        top: parseInt(el.style.top) || 0,
-        collapsed: col,
-        edge,
-      }));
+      localStorage.setItem("sh-nav-pos", JSON.stringify({ left, top, collapsed: col, edge }));
     } catch { /* ignore */ }
   }
 
@@ -86,9 +59,12 @@ export default function Navbar() {
     offset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     el.style.cursor = "grabbing";
     el.style.transition = "none";
-    el.style.transform = "none";
-    el.style.left = rect.left + "px";
-    el.style.top = rect.top + "px";
+    // switch from centered if needed
+    if (el.style.transform) {
+      el.style.transform = "none";
+      el.style.left = rect.left + "px";
+      el.style.top = rect.top + "px";
+    }
     el.setPointerCapture(e.pointerId);
   }, []);
 
@@ -101,8 +77,8 @@ export default function Navbar() {
         Math.abs(y - parseInt(el.style.top || "0")) > 2) {
       moved.current = true;
     }
-    const w = collapsed ? 44 : el.offsetWidth;
-    const h = collapsed ? 44 : el.offsetHeight;
+    const w = collapsed ? 40 : el.offsetWidth;
+    const h = collapsed ? 40 : el.offsetHeight;
     el.style.left = Math.max(0, Math.min(x, window.innerWidth - w)) + "px";
     el.style.top = Math.max(0, Math.min(y, window.innerHeight - h)) + "px";
   }, [collapsed]);
@@ -112,7 +88,6 @@ export default function Navbar() {
     if (!el) return;
     dragging.current = false;
     el.style.cursor = "grab";
-    el.style.transition = "all 400ms var(--ease-spring)";
 
     if (moved.current) {
       const left = parseInt(el.style.left || "0");
@@ -120,64 +95,57 @@ export default function Navbar() {
 
       if (left < SNAP) {
         setCollapsed(true); setSnapEdge("left");
-        persist(el, true, "left");
-      } else if (left > window.innerWidth - 200 - SNAP) {
+        setPos({ left: 4, top });
+        persist(4, top, true, "left");
+      } else if (left > window.innerWidth - 60 - SNAP) {
         setCollapsed(true); setSnapEdge("right");
-        persist(el, true, "right");
+        setPos({ left: window.innerWidth - 40, top });
+        persist(window.innerWidth - 40, top, true, "right");
       } else if (top < SNAP) {
         setCollapsed(true); setSnapEdge("top");
-        persist(el, true, "top");
+        setPos({ left, top: 4 });
+        persist(left, 4, true, "top");
       } else {
         setCollapsed(false);
-        persist(el, false, "top");
+        setPos({ left, top });
+        persist(left, top, false, "top");
       }
+      el.style.transition = "all 400ms var(--ease-spring)";
     }
   }, []);
 
   if (hidden) return null;
-
-  function handleClick(e: React.MouseEvent) {
-    if (moved.current) return;
-    if (collapsed) {
-      // Expand in place — shift position so full navbar fits on screen
-      const el = navRef.current;
-      if (el) {
-        el.style.transition = "all 400ms var(--ease-spring)";
-        const top = parseInt(el.style.top || "16");
-        if (snapEdge === "right") {
-          el.style.left = Math.max(0, window.innerWidth - 440) + "px";
-        } else if (snapEdge === "left") {
-          el.style.left = "8px";
-        } else {
-          // top — keep horizontal position but ensure it fits
-          const left = parseInt(el.style.left || "0");
-          el.style.left = Math.max(8, Math.min(left, window.innerWidth - 440)) + "px";
-        }
-        el.style.top = Math.max(4, Math.min(top, window.innerHeight - 48)) + "px";
-      }
-      setCollapsed(false);
-      setSnapEdge("top"); // reset edge preference
-      if (el) setTimeout(() => persist(el, false, "top"), 50);
-    }
-  }
 
   async function logout() {
     await fetch("/api/auth", { method: "DELETE" });
     window.location.href = "/";
   }
 
-  /* ── Collapsed: small floating handle ── */
+  /* ── Collapsed pill ── */
   if (collapsed) {
+    const p = pos || { left: window.innerWidth / 2 - 20, top: 16 };
     return (
       <div
         ref={navRef}
-        onClick={handleClick}
+        onClick={() => {
+          if (moved.current) return;
+          // Expand in place
+          let nl = p.left, nt = p.top;
+          if (snapEdge === "right") nl = Math.max(0, p.left - NAV_W + 40);
+          else if (snapEdge === "left") nl = 8;
+          else nl = Math.max(8, Math.min(p.left, window.innerWidth - NAV_W));
+          nt = Math.max(4, Math.min(nt, window.innerHeight - 48));
+          setPos({ left: nl, top: nt });
+          setCollapsed(false);
+          persist(nl, nt, false, "top");
+        }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         className="fixed z-50 select-none flex items-center justify-center"
         style={{
+          left: p.left, top: p.top,
           width: 40, height: 40,
           borderRadius: snapEdge === "top" ? "0 0 12px 12px"
             : snapEdge === "left" ? "0 12px 12px 0"
@@ -189,16 +157,21 @@ export default function Navbar() {
           border: "1px solid rgba(0,0,0,0.08)",
           cursor: "grab",
           touchAction: "none",
+          transform: "none",
         }}
         title="点击展开 / 拖拽移动">
-        <span style={{ color: "var(--color-text-muted)", fontSize: "14px", letterSpacing: "3px", lineHeight: 1 }}>
+        <span style={{ color: "var(--color-text-muted)", fontSize: "14px", letterSpacing: "3px", lineHeight: 1, pointerEvents: "none" }}>
           ⋮⋮
         </span>
       </div>
     );
   }
 
-  /* ── Expanded: full navbar ── */
+  /* ── Expanded Navbar ── */
+  const expandedStyle: React.CSSProperties = pos
+    ? { left: pos.left, top: pos.top, transform: "none", cursor: "grab", touchAction: "none" }
+    : { top: "16px", left: "50%", transform: "translateX(-50%)", cursor: "grab", touchAction: "none" };
+
   return (
     <div
       ref={navRef}
@@ -207,13 +180,7 @@ export default function Navbar() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       className="fixed z-50 select-none"
-      style={{
-        top: "16px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        cursor: "grab",
-        touchAction: "none",
-      }}
+      style={expandedStyle}
     >
       <nav
         className="flex items-center gap-6 px-6 h-12 rounded-full text-sm"
