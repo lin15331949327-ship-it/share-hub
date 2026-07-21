@@ -39,3 +39,16 @@ body::after {
 .prose p { margin-bottom: 0.75rem; }
 .prose ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
 .prose a { color: #2563eb; text-decoration: underline; }
+
+/* Hero banner animations */
+@keyframes float-glow {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+  50% { transform: translate(-10px, -8px) scale(1.05); opacity: 1; }
+}
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .group\/banner [style*="animation"] { animation: none !important; }
+}

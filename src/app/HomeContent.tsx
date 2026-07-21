@@ -160,32 +160,58 @@ export default function HomeContent() {
           {search && <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded-md" style={{ color: "var(--color-text-muted)" }}>清除</button>}
         </div>
 
-        {/* Hero Banner */}
+        {/* Hero Banner — enhanced with geometric decor + indicators + floating icon */}
         {featured && isHome && (
           <ScrollReveal>
-            <div className="relative overflow-hidden rounded-[28px]"
+            <div className="relative overflow-hidden rounded-[28px] group/banner"
               style={{
                 minHeight: "320px",
-                background: "linear-gradient(135deg, #F6F7FF 0%, #FBFAFF 100%)",
+                background: "linear-gradient(135deg, #F6F7FF 0%, #EDEEFF 30%, #F8F5FF 60%, #FBFAFF 100%)",
                 boxShadow: "0 20px 60px rgba(79,124,255,0.08)",
                 border: "1px solid rgba(0,0,0,0.04)",
                 padding: "48px",
               }}>
-              {/* Radial glow */}
+
+              {/* --- Background decoration --- */}
+
+              {/* Layer 1: Large ambient glow top-right */}
               <div className="absolute pointer-events-none"
                 style={{
-                  top: "-20%", right: "-8%",
-                  width: "480px", height: "480px", borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(79,124,255,0.12) 0%, rgba(200,180,255,0.04) 40%, transparent 70%)",
-                }} />
-              {/* Secondary smaller glow */}
-              <div className="absolute pointer-events-none"
-                style={{
-                  bottom: "-30%", left: "10%",
-                  width: "300px", height: "300px", borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(79,124,255,0.06) 0%, transparent 60%)",
+                  top: "-25%", right: "-10%",
+                  width: "520px", height: "520px", borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(79,124,255,0.14) 0%, rgba(168,148,255,0.05) 35%, transparent 65%)",
+                  animation: "float-glow 8s ease-in-out infinite",
                 }} />
 
+              {/* Layer 2: Warm accent glow bottom-left */}
+              <div className="absolute pointer-events-none"
+                style={{
+                  bottom: "-35%", left: "5%",
+                  width: "340px", height: "340px", borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(99,140,255,0.08) 0%, rgba(180,160,255,0.03) 40%, transparent 65%)",
+                  animation: "float-glow 10s ease-in-out infinite 3s",
+                }} />
+
+              {/* Layer 3: Geometric dot grid — subtle tech texture */}
+              <div className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                style={{
+                  backgroundImage: "radial-gradient(circle, #4F7CFF 1px, transparent 1px)",
+                  backgroundSize: "28px 28px",
+                  maskImage: "radial-gradient(ellipse at 70% 30%, black 30%, transparent 70%)",
+                  WebkitMaskImage: "radial-gradient(ellipse at 70% 30%, black 30%, transparent 70%)",
+                }} />
+
+              {/* Layer 4: Subtle diagonal light streak */}
+              <div className="absolute pointer-events-none"
+                style={{
+                  top: "10%", left: "55%",
+                  width: "200px", height: "2px",
+                  background: "linear-gradient(90deg, transparent, rgba(79,124,255,0.15), transparent)",
+                  transform: "rotate(-25deg)",
+                  filter: "blur(2px)",
+                }} />
+
+              {/* --- Content --- */}
               <div className="relative z-10 flex items-center h-full gap-8" style={{ minHeight: "224px" }}>
                 {/* Left: 60% text */}
                 <div style={{ flex: "0 0 60%", maxWidth: "60%" }}>
@@ -208,7 +234,6 @@ export default function HomeContent() {
                     </p>
                   )}
                   <div className="flex gap-3">
-                    {/* Primary: blue pill with nested icon */}
                     <a href={featured.link} target="_blank" rel="noopener noreferrer"
                       className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all select-none"
                       style={{
@@ -231,7 +256,6 @@ export default function HomeContent() {
                         </svg>
                       </span>
                     </a>
-                    {/* Secondary: white outline */}
                     <Link href={`/resource/${featured.id}`}
                       className="group inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all select-none"
                       style={{
@@ -254,9 +278,13 @@ export default function HomeContent() {
                   </div>
                 </div>
 
-                {/* Right: 40% icon area — double-bezel */}
+                {/* Right: 40% icon — with subtle float animation */}
                 <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%" }}>
-                  <div className="rounded-[24px] p-1.5" style={{ background: "rgba(0,0,0,0.03)" }}>
+                  <div className="rounded-[24px] p-1.5"
+                    style={{
+                      background: "rgba(0,0,0,0.03)",
+                      animation: "icon-float 5s ease-in-out infinite",
+                    }}>
                     <div className="flex items-center justify-center select-none rounded-[calc(24px-6px)] overflow-hidden"
                       style={{
                         width: "320px", height: "200px",
@@ -269,6 +297,13 @@ export default function HomeContent() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* --- Bottom indicator dots --- */}
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                <div className="w-2 h-2 rounded-full" style={{ background: "var(--color-accent)", boxShadow: "0 0 6px rgba(37,99,235,0.4)" }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: "rgba(0,0,0,0.10)" }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: "rgba(0,0,0,0.10)" }} />
               </div>
             </div>
           </ScrollReveal>
