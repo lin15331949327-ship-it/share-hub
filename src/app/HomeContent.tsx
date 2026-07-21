@@ -65,6 +65,27 @@ export default function HomeContent() {
   const featured = display.find((r) => r.featured) || display[0];
   const isHome = !activeCategory && !search;
 
+  // recent = last 4 by time
+  const recent = useMemo(() => {
+    return [...display].sort((a, b) => b.createdAt - a.createdAt).slice(0, 4);
+  }, [display]);
+
+  // grouped by category for sectioned view
+  const categorySections = useMemo(() => {
+    if (activeCategory || search) return [];
+    const grouped = new Map<string, Resource[]>();
+    for (const r of display) {
+      const list = grouped.get(r.category) || [];
+      list.push(r);
+      grouped.set(r.category, list);
+    }
+    return Array.from(grouped.entries()).sort((a, b) => {
+      const catA = cMap.get(a[0]);
+      const catB = cMap.get(b[0]);
+      return (catA?.sortWeight ?? 0) - (catB?.sortWeight ?? 0);
+    });
+  }, [display, activeCategory, search, cMap]);
+
   function selectCat(id: string | null) {
     setActiveCategory(id);
     setSidebarOpen(false);
@@ -89,7 +110,7 @@ export default function HomeContent() {
         <button onClick={() => setSidebarOpen(!sidebarOpen)}
           className="flex items-center gap-2 w-full px-4 py-3 rounded-[var(--radius-md)] border text-sm font-medium"
           style={{ background: "#fff", borderColor: "var(--color-border)", color: "var(--color-text)" }}>
-          {activeCategory ? `${cMap.get(activeCategory)?.icon || ""} ${cMap.get(activeCategory)?.name || ""}` : `全部 (${allCount})`}
+          {activeCategory ? `${cMap.get(activeCategory)?.icon || ""} ${cMap.get(activeCategory)?.name || ""}` : `首页 (${allCount})`}
           <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
         </button>
         {sidebarOpen && (
@@ -173,26 +194,90 @@ export default function HomeContent() {
           </ScrollReveal>
         )}
 
-        {/* Resource heading */}
-        <ScrollReveal>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold tracking-tight" style={{ fontSize: "var(--text-lg)", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>
-              {search ? `搜索结果 (${display.length})` : activeCategory ? `${cMap.get(activeCategory)?.icon || ""} ${cMap.get(activeCategory)?.name || ""} (${display.length})` : `全部资源 (${display.length})`}
-            </h2>
-          </div>
-        </ScrollReveal>
+        {/* ====== Search results ====== */}
+        {search && (
+          <>
+            <ScrollReveal>
+              <SectionHeading title={`搜索结果 (${display.length})`} />
+            </ScrollReveal>
+            {display.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {display.map((r, i) => (
+                  <ScrollReveal key={r.id} delay={i * 50}>
+                    <ResourceCard resource={r} category={cMap.get(r.category)} />
+                  </ScrollReveal>
+                ))}
+              </div>
+            ) : (
+              <Empty message="没有匹配的资源" hint="试试别的关键词" />
+            )}
+          </>
+        )}
 
-        {/* Card grid */}
-        {display.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {display.map((r, i) => (
-              <ScrollReveal key={r.id} delay={i * 50}>
-                <ResourceCard resource={r} category={cMap.get(r.category)} />
-              </ScrollReveal>
-            ))}
-          </div>
-        ) : (
-          <Empty message={search ? "没有匹配的资源" : "还没有资源"} hint={search ? "试试别的关键词" : "登录后就可以添加啦"} />
+        {/* ====== Single category view ====== */}
+        {activeCategory && !search && (
+          <>
+            <ScrollReveal>
+              <SectionHeading title={`${cMap.get(activeCategory)?.icon || ""} ${cMap.get(activeCategory)?.name || ""} (${display.length})`} />
+            </ScrollReveal>
+            {display.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {display.map((r, i) => (
+                  <ScrollReveal key={r.id} delay={i * 50}>
+                    <ResourceCard resource={r} category={cMap.get(r.category)} />
+                  </ScrollReveal>
+                ))}
+              </div>
+            ) : (
+              <Empty message="还没有资源" hint="登录后就可以添加啦" />
+            )}
+          </>
+        )}
+
+        {/* ====== 首页 — sectioned by category ====== */}
+        {!activeCategory && !search && (
+          <>
+            {/* Recent updates */}
+            {recent.length > 0 && (
+              <div>
+                <SectionHeading title="最近更新" viewAll />
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {recent.map((r, i) => (
+                    <ScrollReveal key={r.id} delay={i * 50}>
+                      <ResourceCard resource={r} category={cMap.get(r.category)} />
+                    </ScrollReveal>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Category sections */}
+            {categorySections.map(([catId, items]) => {
+              const cat = cMap.get(catId);
+              if (!cat || items.length === 0) return null;
+              const shown = items.slice(0, 4);
+              return (
+                <div key={catId}>
+                  <SectionHeading
+                    title={`${cat.icon} ${cat.name}`}
+                    count={items.length}
+                    onViewAll={() => selectCat(cat.id)}
+                  />
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {shown.map((r, i) => (
+                      <ScrollReveal key={r.id} delay={i * 50}>
+                        <ResourceCard resource={r} category={cat} />
+                      </ScrollReveal>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {display.length === 0 && (
+              <Empty message="还没有资源" hint="登录后就可以添加啦" />
+            )}
+          </>
         )}
       </div>
     </div>
@@ -208,7 +293,7 @@ function SidebarItems({ allCount, activeCategory, sidebarCats, resources, select
     <>
       <button onClick={() => selectCat(null)} className="flex items-center justify-between w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm font-medium transition-all"
         style={{ background: activeCategory === null ? "var(--color-accent-glow)" : "transparent", color: activeCategory === null ? "var(--color-accent)" : "var(--color-text)", transition: "all 200ms var(--ease-spring)" }}>
-        <span>全部</span><span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{allCount}</span>
+        <span>首页</span><span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{allCount}</span>
       </button>
       {sidebarCats.map((cat) => {
         const count = resources.filter((r) => r.category === cat.id).length;
@@ -223,6 +308,29 @@ function SidebarItems({ allCount, activeCategory, sidebarCats, resources, select
         );
       })}
     </>
+  );
+}
+
+/* ====== Section Heading ====== */
+
+function SectionHeading({ title, count, viewAll, onViewAll }: {
+  title: string; count?: number; viewAll?: boolean; onViewAll?: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="font-bold tracking-tight" style={{ fontSize: "var(--text-lg)", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>
+        {title}
+        {count !== undefined && (
+          <span className="ml-2 font-normal" style={{ color: "var(--color-text-muted)", fontSize: "var(--text-sm)" }}>({count})</span>
+        )}
+      </h2>
+      {(viewAll || onViewAll) && (
+        <button onClick={onViewAll} className="text-xs font-medium transition-colors"
+          style={{ color: "var(--color-text-muted)" }}>
+          查看全部 &rarr;
+        </button>
+      )}
+    </div>
   );
 }
 
