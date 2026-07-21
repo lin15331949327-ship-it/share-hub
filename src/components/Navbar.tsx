@@ -6,8 +6,16 @@ import { useRouter, usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
+  const [hidden, setHidden] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    /* Hide on mobile view — read from URL on client side only */
+    setHidden(new URLSearchParams(window.location.search).get("view") === "mobile");
+  }, [pathname]);
+
+  if (hidden) return null;
   const navRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });

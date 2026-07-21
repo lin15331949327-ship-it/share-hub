@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { stripHtml } from "./HomeShared";
 import type { Resource, Category } from "@/lib/types";
 
@@ -44,7 +45,7 @@ function greeting(): string {
   return "Good Night";
 }
 
-type Tab = "home" | "search" | "discover" | "bookmarks" | "profile";
+type Tab = "home" | "search" | "bookmarks" | "profile";
 
 /* ============================== MAIN ============================== */
 export default function MobileLayout({
@@ -52,7 +53,7 @@ export default function MobileLayout({
   sidebarCats, resources, selectCat, featured, recent,
 }: Props) {
   const [tab, setTab] = useState<Tab>("home");
-  const [discoverIdx, setDiscoverIdx] = useState(0);
+  const router = useRouter();
 
   /* Body background override */
   useEffect(() => {
@@ -61,12 +62,10 @@ export default function MobileLayout({
     return () => { document.body.style.background = prev; };
   }, []);
 
-  /* Random discover pick */
-  const discoverList = useMemo(() => display.filter((r) => r.featured).length > 0
-    ? display.filter((r) => r.featured)
-    : display.slice(0, 3),
-  [display]);
-  useEffect(() => { setDiscoverIdx(Math.floor(Math.random() * discoverList.length)); }, [tab, discoverList.length]);
+  async function logout() {
+    await fetch("/api/auth", { method: "DELETE" });
+    router.push("/");
+  }
 
   const bookmarkList = useMemo(() => display.filter((r) => r.featured), [display]);
 
@@ -87,7 +86,7 @@ export default function MobileLayout({
       {/* ═══ HOME TAB ═══ */}
       {tab === "home" && (
         <div className="relative z-10">
-          <GreetingHeader />
+          <GreetingHeader onLogout={logout} />
           <AISearch value={search} onChange={setSearch} onFocus={() => setTab("search")} />
           {featured && <FeaturedCard resource={featured} category={cMap.get(featured.category)} />}
           {recent.length > 0 && <RecentScroll items={recent} cMap={cMap} />}
@@ -135,61 +134,6 @@ export default function MobileLayout({
         </div>
       )}
 
-      {/* ═══ DISCOVER (AI) TAB ═══ */}
-      {tab === "discover" && discoverList.length > 0 && (() => {
-        const pick = discoverList[discoverIdx % discoverList.length];
-        return (
-          <div className="relative z-10 px-5 pt-4">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: T.purple }}>✦ Discover</p>
-                <h2 className="text-xl font-bold mt-1" style={{ fontFamily: "var(--font-display)" }}>AI Pick for You</h2>
-              </div>
-              <button
-                onClick={() => setDiscoverIdx((i) => (i + 1) % discoverList.length)}
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90"
-                style={{ background: T.surface, border: `1px solid ${T.border}` }}
-              >
-                <svg className="w-4 h-4" style={{ color: T.soft }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                </svg>
-              </button>
-            </div>
-            <Link href={`/resource/${pick.id}`} style={{ textDecoration: "none" }}>
-              <div className="rounded-3xl p-6 transition-all active:scale-[0.985]"
-                style={{
-                  background: `linear-gradient(135deg, ${T.accentSoft} 0%, ${T.purpleSoft} 100%)`,
-                  border: `1px solid rgba(139,92,246,0.18)`,
-                  boxShadow: `0 0 60px ${T.purpleSoft}, inset 0 1px 0 rgba(255,255,255,0.04)`,
-                }}>
-                <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold mb-4"
-                  style={{ background: "rgba(139,92,246,0.25)", color: "#C4B5FD" }}>AI Recommended</span>
-                <FaviconLarge link={pick.link} fallback={cMap.get(pick.category)?.icon || "📦"} />
-                <h3 className="text-xl font-bold mt-4 mb-2" style={{ fontFamily: "var(--font-display)" }}>{pick.name}</h3>
-                <p className="text-sm leading-relaxed line-clamp-2" style={{ color: T.soft }}>
-                  {pick.subtitle || (pick.description ? stripHtml(pick.description) : "Check out this resource")}
-                </p>
-                <div className="flex gap-3 mt-5">
-                  <a href={pick.link} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
-                    style={{ background: "#fff", color: "#09090B" }}>
-                    Open
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                  </a>
-                  <Link href={`/resource/${pick.id}`}
-                    className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
-                    style={{ background: "rgba(255,255,255,0.08)", color: T.text }}>
-                    Details
-                  </Link>
-                </div>
-              </div>
-            </Link>
-          </div>
-        );
-      })()}
-
       {/* ═══ BOOKMARKS TAB ═══ */}
       {tab === "bookmarks" && (
         <div className="relative z-10 px-5 pt-4">
@@ -207,21 +151,44 @@ export default function MobileLayout({
       {/* ═══ PROFILE TAB ═══ */}
       {tab === "profile" && (
         <div className="relative z-10 px-5 pt-4">
-          <div className="flex flex-col items-center py-12">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold mb-4"
+          {/* Avatar */}
+          <div className="flex flex-col items-center py-8">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold"
               style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})` }}>
               S
             </div>
-            <h2 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)" }}>ShareHub</h2>
+            <h2 className="text-lg font-bold mt-4" style={{ fontFamily: "var(--font-display)" }}>ShareHub</h2>
             <p className="text-sm mt-1" style={{ color: T.muted }}>AI-native resource sharing</p>
+          </div>
+
+          {/* Menu links */}
+          <div className="space-y-2">
+            <ProfileLink href="/admin/resources/new" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>} label="提交资源" />
+            <ProfileLink href="/admin/resources" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>} label="管理资源" />
+            <ProfileLink href="/admin/categories" icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>} label="管理分类" />
+
+            <hr className="my-3" style={{ borderColor: T.border }} />
+
+            <button onClick={logout}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
+              style={{ color: "#EF4444", background: T.surface, border: `1px solid ${T.border}` }}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+              </svg>
+              退出登录
+            </button>
+
             <button
               onClick={() => {
                 const url = new URL(window.location.href);
                 url.searchParams.set("view", "desktop");
                 window.location.href = url.toString();
               }}
-              className="mt-6 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] mt-2"
               style={{ background: T.surface, color: T.soft, border: `1px solid ${T.border}` }}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+              </svg>
               Switch to Desktop
             </button>
           </div>
@@ -261,7 +228,7 @@ function AmbientBackground() {
   );
 }
 
-function GreetingHeader() {
+function GreetingHeader({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="flex items-start justify-between px-5 pt-5 pb-1">
       <div>
@@ -278,10 +245,12 @@ function GreetingHeader() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
           </svg>
         </button>
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
-          style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})` }}>
+        <button onClick={onLogout}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all active:scale-90"
+          style={{ background: `linear-gradient(135deg, ${T.accent}, ${T.purple})`, border: "none", cursor: "pointer" }}
+          title="退出登录">
           S
-        </div>
+        </button>
       </div>
     </div>
   );
@@ -508,18 +477,19 @@ function BottomNav({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => void }) {
           icon={<><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.3-4.3" /></>}
           label="Search" />
 
-        {/* AI Magic Button — prominent center */}
-        <button onClick={() => onTab("discover")}
+        {/* + Add — prominent center */}
+        <Link href="/admin/resources/new"
           className="flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all active:scale-90 -mt-5 mx-1"
           style={{
+            textDecoration: "none",
             background: `linear-gradient(135deg, ${T.accent}, ${T.purple})`,
             border: `2px solid rgba(255,255,255,0.2)`,
             boxShadow: `0 0 24px ${T.accentGlow}, 0 4px 16px rgba(59,130,246,0.3)`,
           }}>
           <svg className="w-6 h-6" style={{ color: "#fff" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-        </button>
+        </Link>
 
         <NavItem active={tab === "bookmarks"} onClick={() => onTab("bookmarks")}
           icon={<path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />}
@@ -529,6 +499,17 @@ function BottomNav({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => void }) {
           label="Profile" />
       </div>
     </div>
+  );
+}
+
+function ProfileLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link href={href}
+      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
+      style={{ textDecoration: "none", background: T.surface, color: T.text, border: `1px solid ${T.border}` }}>
+      <span style={{ color: T.soft }}>{icon}</span>
+      {label}
+    </Link>
   );
 }
 
