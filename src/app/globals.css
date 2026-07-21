@@ -68,6 +68,9 @@ body::after {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+/* Mobile card entrance */
+@keyframes cardIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
 @media (prefers-reduced-motion: reduce) {
   .group\/banner [style*="animation"] { animation: none !important; }
 }

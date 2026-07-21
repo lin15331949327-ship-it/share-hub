@@ -99,7 +99,10 @@ export function useHomeData() {
 
   function selectCat(id: string | null) {
     setActiveCategory(id);
-    window.history.replaceState(null, "", id ? `/?cat=${id}` : "/");
+    const sp = new URLSearchParams(window.location.search);
+    if (id) sp.set("cat", id); else sp.delete("cat");
+    const qs = sp.toString();
+    window.history.replaceState(null, "", qs ? `/?${qs}` : "/");
   }
 
   const sidebarCats = [...categories].filter((c) => !c.isCatchAll).sort((a, b) => (a.sortWeight ?? 0) - (b.sortWeight ?? 0));
