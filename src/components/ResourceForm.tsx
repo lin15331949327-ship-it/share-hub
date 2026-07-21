@@ -40,6 +40,23 @@ export default function ResourceForm({ categories, resource }: Props) {
     ],
     content: resource?.description || "",
     immediatelyRender: false,
+    editorProps: {
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith("image/")) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              handleUpload(file, "image");
+              return true;
+            }
+          }
+        }
+        return false;
+      },
+    },
   });
 
   useEffect(() => {
