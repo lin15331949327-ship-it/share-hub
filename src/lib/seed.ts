@@ -11,7 +11,7 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: "movies", name: "影视资源", icon: "🎬", order: 5 },
   { id: "music", name: "音乐音频", icon: "🎵", order: 6 },
   { id: "plugins", name: "插件模版", icon: "🧩", order: 7 },
-  { id: "other", name: "其他", icon: "📦", order: 8, isCatchAll: true, sortWeight: 998 },
+  { id: "other", name: "其他", icon: "📦", order: 8, isCatchAll: true, sortWeight: 1000 },
 ];
 
 export async function seed() {
@@ -28,11 +28,11 @@ export async function seed() {
     for (const cat of existing) {
       const def = defaults.get(cat.id);
       if (!def) continue;
-      if (def.isCatchAll && cat.isCatchAll === undefined) {
-        cat.isCatchAll = true;
+      if (def.isCatchAll !== undefined && cat.isCatchAll !== def.isCatchAll) {
+        cat.isCatchAll = def.isCatchAll;
         changed = true;
       }
-      if (def.sortWeight !== undefined && cat.sortWeight === undefined) {
+      if (def.sortWeight !== undefined && cat.sortWeight !== def.sortWeight) {
         cat.sortWeight = def.sortWeight;
         changed = true;
       }
