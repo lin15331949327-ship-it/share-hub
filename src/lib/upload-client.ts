@@ -21,6 +21,10 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = MAX_RETR
       }
     }
   }
+  // friendly error messages
+  if (lastErr instanceof TypeError && (lastErr as any).message === "Failed to fetch") {
+    throw new Error("网络不通，上传服务器连不上——试试切换VPN节点或检查网络");
+  }
   throw lastErr;
 }
 
@@ -53,7 +57,7 @@ async function simpleUpload(file: File): Promise<string> {
     `${WORKER}/upload?filename=${encodeURIComponent(file.name)}&ct=${ct}`,
     { method: "POST", body: file }
   );
-  if (!res.ok) throw new Error("上传失败");
+  if (!res.ok) throw new Error(`上传失败 (${res.status})，请重试或联系管理员`);
   const { url } = await res.json();
   return url;
 }
