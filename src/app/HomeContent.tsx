@@ -376,14 +376,13 @@ function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallb
 
 function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
   const tags = Array.isArray(resource.tags) ? resource.tags : [];
-  const desc = resource.description ? stripHtml(resource.description) : "";
 
   return (
     <Link href={`/resource/${resource.id}`} className="block group" style={{ textDecoration: "none" }}>
       <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
         style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}>
         <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all"
-          style={{ background: "#fff", boxShadow: "var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "180px" }}
+          style={{ background: "#fff", boxShadow: "var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}
           onMouseEnter={(e) => {
             const p = e.currentTarget.parentElement;
             if (p) { p.style.background = "var(--color-accent-ring)"; p.style.transform = "translateY(-2px)"; p.style.boxShadow = "var(--shadow-card-hover)"; }
@@ -409,24 +408,6 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
             </div>
           </div>
 
-          {/* Description — 2 independent lines, each truncated */}
-          <div className="flex-1 mb-3">
-            {desc ? (
-              <div className="space-y-1">
-                <p className="truncate leading-relaxed" style={{ fontSize: "var(--text-sm)", color: "var(--color-text-soft)" }}>
-                  {descLines(desc, 0)}
-                </p>
-                <p className="truncate leading-relaxed" style={{ fontSize: "var(--text-sm)", color: "var(--color-text-soft)" }}>
-                  {descLines(desc, 1)}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <div className="h-3 w-full rounded" style={{ background: "var(--color-paper-2)" }} />
-                <div className="h-3 w-3/5 rounded" style={{ background: "var(--color-paper-2)" }} />
-              </div>
-            )}
-          </div>
 
           {/* Footer: category chip + tags */}
           <div className="flex flex-wrap gap-1.5 items-center">
