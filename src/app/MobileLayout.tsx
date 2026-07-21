@@ -383,15 +383,15 @@ function CollectionStrip({ category, items, selectCat }: { category: Category; i
           <h3 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>{category.name}</h3>
         </div>
         <button onClick={() => selectCat(category.id)}
-          className="text-xs font-medium transition-all active:scale-95"
+          className="text-xs font-medium transition-all active:scale-95 flex items-center gap-1"
           style={{ color: T.accent }}>
-          See all →
+          See all <span style={{ color: T.muted, fontWeight: 400 }}>({items.length})</span> →
         </button>
       </div>
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5" style={{ scrollSnapType: "x mandatory" }}>
-        {items.slice(0, 8).map((r) => (
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 scroll-pl-5" style={{ scrollSnapType: "x mandatory" }}>
+        {items.slice(0, 4).map((r) => (
           <Link key={r.id} href={`/resource/${r.id}`} style={{ textDecoration: "none", scrollSnapAlign: "start", flexShrink: 0 }}>
-            <div className="w-[96px] h-[110px] rounded-2xl p-3 transition-all active:scale-[0.97] flex flex-col items-center text-center"
+            <div className="w-[134px] h-[110px] rounded-2xl p-3 transition-all active:scale-[0.97] flex flex-col items-center text-center"
               style={{
                 background: T.surface, border: `1px solid ${T.border}`,
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
@@ -400,7 +400,7 @@ function CollectionStrip({ category, items, selectCat }: { category: Category; i
                 style={{ background: T.raised }}>
                 <FaviconIcon link={r.link} alt={r.name} fallback={category.icon || "📦"} />
               </div>
-              <h4 className="text-[12px] font-semibold line-clamp-2 leading-tight flex-1 flex items-center" style={{ fontFamily: "var(--font-display)" }}>{r.name}</h4>
+              <h4 className="text-[12px] font-semibold line-clamp-2 leading-tight flex-1 flex items-center px-0.5" style={{ fontFamily: "var(--font-display)", wordBreak: "break-word" }}>{r.name}</h4>
             </div>
           </Link>
         ))}
@@ -518,35 +518,31 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
-  if (sources.length === 0 || srcIdx >= sources.length) return <>{fallback}</>;
   return (
-    <img
-      src={sources[srcIdx]} alt={alt}
-      className="w-5 h-5 object-contain"
-      loading="lazy"
-      onError={() => setSrcIdx((i) => i + 1)}
-      onLoad={(e) => {
-        const img = e.currentTarget;
-        if (img.naturalWidth < 8 || img.naturalHeight < 8) setSrcIdx((i) => i + 1);
-      }}
-    />
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20 }}>
+      <span style={{ position: "absolute", fontSize: 16, lineHeight: 1 }}>{fallback}</span>
+      {srcIdx < sources.length && (
+        <img src={sources[srcIdx]} alt={alt}
+          style={{ position: "relative", zIndex: 1, width: 20, height: 20, objectFit: "contain", background: "transparent" }}
+          onError={() => setSrcIdx((i) => i + 1)}
+          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) setSrcIdx((i) => i + 1); }} />
+      )}
+    </span>
   );
 }
 
 function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
-  if (sources.length === 0 || srcIdx >= sources.length) return <>{fallback}</>;
   return (
-    <img
-      src={sources[srcIdx]} alt=""
-      className="w-10 h-10 object-contain"
-      loading="lazy"
-      onError={() => setSrcIdx((i) => i + 1)}
-      onLoad={(e) => {
-        const img = e.currentTarget;
-        if (img.naturalWidth < 8 || img.naturalHeight < 8) setSrcIdx((i) => i + 1);
-      }}
-    />
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40 }}>
+      <span style={{ position: "absolute", fontSize: 32, lineHeight: 1 }}>{fallback}</span>
+      {srcIdx < sources.length && (
+        <img src={sources[srcIdx]} alt=""
+          style={{ position: "relative", zIndex: 1, width: 40, height: 40, objectFit: "contain", background: "transparent" }}
+          onError={() => setSrcIdx((i) => i + 1)}
+          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) setSrcIdx((i) => i + 1); }} />
+      )}
+    </span>
   );
 }
