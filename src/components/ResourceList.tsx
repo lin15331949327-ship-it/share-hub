@@ -10,15 +10,17 @@ export default function ResourceList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showTrash, setShowTrash] = useState(false);
   const router = useRouter();
 
   const dragId = useRef<string | null>(null);
   const dragOverId = useRef<string | null>(null);
 
-  useEffect(() => {
+  function refresh() {
+    const trashParam = showTrash ? "?trash=1" : "";
     Promise.all([
       fetch("/api/auth").then((r) => r.json()),
-      fetch("/api/resources").then((r) => r.json()),
+      fetch("/api/resources" + trashParam).then((r) => r.json()),
       fetch("/api/categories").then((r) => r.json()),
     ]).then(([auth, res, cats]) => {
       setRole(auth.role);
@@ -26,13 +28,30 @@ export default function ResourceList() {
       setCategories(cats);
       setLoading(false);
     });
-  }, []);
+  }
+
+  useEffect(() => { refresh(); }, [showTrash]);
 
   async function del(id: string, name: string) {
-    if (!confirm(`删除「${name}」？此操作不可撤销。`)) return;
+    if (!confirm(`删除「${name}」？可在回收站恢复。`)) return;
     await fetch(`/api/resources/${id}`, { method: "DELETE" });
     setResources((prev) => prev.filter((r) => r.id !== id));
     router.refresh();
+  }
+
+  async function restore(id: string) {
+    await fetch(`/api/resources/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deletedAt: null }),
+    });
+    setResources((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  async function permanentDel(id: string, name: string) {
+    if (!confirm(`彻底删除「${name}」？此操作不可撤销！`)) return;
+    await fetch(`/api/resources/${id}?permanent=1`, { method: "DELETE" });
+    setResources((prev) => prev.filter((r) => r.id !== id));
   }
 
   async function toggleFeatured(id: string, current: boolean) {
@@ -100,17 +119,29 @@ export default function ResourceList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-zinc-900">资源管理</h2>
-          {role === "admin" && (
+          <h2 className="text-lg font-semibold text-zinc-900">{showTrash ? "回收站" : "资源管理"}</h2>
+          {role === "admin" && !showTrash && (
             <span className="text-xs text-zinc-400">拖拽行可排序</span>
           )}
         </div>
-        <Link
-          href="/admin/resources/new"
-          className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors"
-        >
-          + 新建资源
-        </Link>
+        <div className="flex items-center gap-3">
+          {role === "admin" && (
+            <button
+              onClick={() => setShowTrash(!showTrash)}
+              className="text-sm text-zinc-500 hover:text-zinc-700 transition-colors"
+            >
+              {showTrash ? "返回管理" : "回收站"}
+            </button>
+          )}
+          {!showTrash && (
+            <Link
+              href="/admin/resources/new"
+              className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors"
+            >
+              + 新建资源
+            </Link>
+          )}
+        </div>
       </div>
 
       {resources.length === 0 ? (
@@ -169,25 +200,27 @@ export default function ResourceList() {
                       </td>
                     )}
                     <td className="px-4 py-3 text-right">
-                      {canEdit && (
+                      {showTrash && role === "admin" ? (
                         <>
-                          <Link
-                            href={`/admin/resources/${r.id}/edit`}
-                            className="text-zinc-500 hover:text-zinc-900 mr-3 transition-colors"
-                          >
+                          <button onClick={() => restore(r.id)} className="text-blue-500 hover:text-blue-700 mr-3 transition-colors">
+                            恢复
+                          </button>
+                          <button onClick={() => permanentDel(r.id, r.name)} className="text-red-400 hover:text-red-600 transition-colors">
+                            彻底删除
+                          </button>
+                        </>
+                      ) : canEdit ? (
+                        <>
+                          <Link href={`/admin/resources/${r.id}/edit`} className="text-zinc-500 hover:text-zinc-900 mr-3 transition-colors">
                             编辑
                           </Link>
                           {role === "admin" && (
-                            <button
-                              onClick={() => del(r.id, r.name)}
-                              className="text-red-400 hover:text-red-600 transition-colors"
-                            >
+                            <button onClick={() => del(r.id, r.name)} className="text-red-400 hover:text-red-600 transition-colors">
                               删除
                             </button>
                           )}
                         </>
-                      )}
-                      {!canEdit && (
+                      ) : (
                         <span className="text-zinc-300">—</span>
                       )}
                     </td>

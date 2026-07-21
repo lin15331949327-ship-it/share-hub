@@ -42,6 +42,19 @@ export async function seed() {
       await setCategories(existing);
       console.log("[seed] Migrated categories — added isCatchAll / sortWeight");
     }
+
+    // Auto-purge: hard-delete resources in trash > 30 days
+    const { getAllResources, deleteResource } = await import("./kv");
+    const { deleteR2Files } = await import("./r2");
+    const all = await getAllResources();
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    for (const r of all) {
+      if (r.deletedAt && r.deletedAt < cutoff) {
+        await deleteR2Files(r.description);
+        await deleteResource(r.id);
+        console.log(`[seed] Auto-purged: ${r.name}`);
+      }
+    }
   }
 
   // Seed admin password if not set

@@ -52,9 +52,9 @@ export async function PUT(
   return NextResponse.json(updated);
 }
 
-// DELETE /api/resources/[id]
+// DELETE /api/resources/[id] — soft delete (or permanent with ?permanent=1)
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
@@ -64,10 +64,21 @@ export async function DELETE(
 
   const { id } = await params;
   const resource = await getResource(id);
-  if (resource) {
-    await deleteR2Files(resource.description);
+  if (!resource) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  await deleteResource(id);
+
+  const permanent = req.nextUrl.searchParams.get("permanent") === "1";
+
+  if (permanent) {
+    await deleteR2Files(resource.description);
+    await deleteResource(id);
+    return NextResponse.json({ ok: true });
+  }
+
+  // soft delete
+  resource.deletedAt = Date.now();
+  await updateResource(resource);
   return NextResponse.json({ ok: true });
 }
 
@@ -93,6 +104,10 @@ export async function PATCH(
   }
   if (typeof body.displayOrder === "number") {
     resource.displayOrder = body.displayOrder;
+  }
+  // restore from trash
+  if (body.deletedAt === null) {
+    resource.deletedAt = undefined;
   }
 
   await updateResource(resource);

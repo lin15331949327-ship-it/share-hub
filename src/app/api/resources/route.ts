@@ -6,9 +6,15 @@ import type { Resource } from "@/lib/types";
 // GET /api/resources
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get("category");
+  const trash = req.nextUrl.searchParams.get("trash") === "1";
   const all = await getAllResources();
-  const filtered = category ? all.filter((r) => r.category === category) : all;
-  // sort: by displayOrder descending (newest/highest first), then category
+
+  // soft-delete: normal view excludes deletedAt, trash view only shows deletedAt
+  const stage1 = trash
+    ? all.filter((r) => r.deletedAt)
+    : all.filter((r) => !r.deletedAt);
+
+  const filtered = category ? stage1.filter((r) => r.category === category) : stage1;
   filtered.sort((a, b) => {
     const oA = a.displayOrder ?? a.createdAt;
     const oB = b.displayOrder ?? b.createdAt;

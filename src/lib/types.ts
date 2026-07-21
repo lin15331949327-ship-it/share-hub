@@ -13,6 +13,8 @@ export interface Resource {
   displayOrder?: number;
   /** Admin-pinned featured resource for Hero banner */
   featured?: boolean;
+  /** Soft delete timestamp — hidden from normal views */
+  deletedAt?: number;
 }
 
 export interface Category {
