@@ -69,7 +69,7 @@ export default function HomeContent() {
   const [slideIdx, setSlideIdx] = useState(0);
   useEffect(() => {
     if (!isHome || carouselSlides.length <= 1) return;
-    const t = setInterval(() => setSlideIdx((i) => (i + 1) % carouselSlides.length), 5000);
+    const t = setInterval(() => setSlideIdx((i) => (i + 1) % carouselSlides.length), 8000);
     return () => clearInterval(t);
   }, [isHome, carouselSlides.length]);
   useEffect(() => { setSlideIdx(0); }, [carouselSlides.length]);
@@ -178,17 +178,15 @@ export default function HomeContent() {
           <ScrollReveal>
             <div className="relative rounded-[28px] group/banner"
               style={{
-                minHeight: "320px",
                 background: "linear-gradient(135deg, #F6F7FF 0%, #EDEEFF 30%, #F8F5FF 60%, #FBFAFF 100%)",
                 boxShadow: "0 20px 60px rgba(79,124,255,0.08)",
                 border: "1px solid rgba(0,0,0,0.04)",
-                padding: "48px",
               }}>
 
-              {/* --- Background decoration --- */}
-
-              {/* Layer 1: Large ambient glow top-right */}
-              <div className="absolute pointer-events-none"
+              {/* Background decorations layer — clipped to rounded corners */}
+              <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none">
+                {/* Layer 1: Large ambient glow top-right */}
+                <div className="absolute"
                 style={{
                   top: "-25%", right: "-10%",
                   width: "520px", height: "520px", borderRadius: "50%",
@@ -224,8 +222,10 @@ export default function HomeContent() {
                   filter: "blur(2px)",
                 }} />
 
+              </div>{/* end background decorations layer */}
+
               {/* --- Content --- */}
-              <div className="relative z-10 flex items-center h-full gap-8" style={{ minHeight: "224px" }}>
+              <div className="relative z-10 flex items-center gap-8" style={{ padding: "48px", minHeight: "320px" }}>
                 {/* Left: 60% text */}
                 <div style={{ flex: "0 0 60%", maxWidth: "60%" }}>
                   <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase mb-5"
@@ -291,20 +291,19 @@ export default function HomeContent() {
                   </div>
                 </div>
 
-                {/* Right: 40% icon — double-bezel with float animation */}
-                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%", minWidth: 0 }}>
-                  {/* Outer tray — visible frame */}
-                  <div className="rounded-[20px] p-1.5"
+                {/* Right: 40% icon — generous double-bezel with float */}
+                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 42%", minWidth: 0 }}>
+                  {/* Outer tray */}
+                  <div className="rounded-[20px] p-2"
                     style={{
-                      background: "rgba(0,0,0,0.05)",
+                      background: "rgba(0,0,0,0.04)",
                       border: "1px solid rgba(0,0,0,0.08)",
                       animation: "icon-float 5s ease-in-out infinite",
-                      maxWidth: "100%",
                     }}>
                     {/* Inner glass plate */}
-                    <div className="flex items-center justify-center select-none rounded-[14px] overflow-hidden"
+                    <div className="flex items-center justify-center select-none rounded-[12px]"
                       style={{
-                        width: "min(320px, 100%)", height: "200px",
+                        width: "320px", height: "200px",
                         background: "rgba(255,255,255,0.55)",
                         backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                         border: "1px solid rgba(255,255,255,0.7)",
