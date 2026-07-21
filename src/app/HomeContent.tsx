@@ -237,7 +237,7 @@ function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; dela
 /* ====== Favicon with emoji fallback ====== */
 
 function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
-  const sources = getFaviconSources(link, 128);
+  const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
   if (sources.length === 0 || srcIdx >= sources.length) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
   return (
