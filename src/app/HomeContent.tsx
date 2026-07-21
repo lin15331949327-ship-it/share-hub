@@ -67,7 +67,7 @@ export default function HomeContent() {
 
   // recent = last 4 by time
   const recent = useMemo(() => {
-    return [...display].sort((a, b) => b.createdAt - a.createdAt).slice(0, 4);
+    return [...display].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
   }, [display]);
 
   // grouped by category for sectioned view
