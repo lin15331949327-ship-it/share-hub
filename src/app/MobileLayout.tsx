@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FaviconIcon, stripHtml } from "./HomeShared";
+import { stripHtml } from "./HomeShared";
 import type { Resource, Category } from "@/lib/types";
 
 interface Props {
