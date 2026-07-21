@@ -176,7 +176,7 @@ export default function HomeContent() {
         {/* Hero Banner — enhanced with geometric decor + indicators + floating icon */}
         {featured && isHome && (
           <ScrollReveal>
-            <div className="relative overflow-hidden rounded-[28px] group/banner"
+            <div className="relative rounded-[28px] group/banner"
               style={{
                 minHeight: "320px",
                 background: "linear-gradient(135deg, #F6F7FF 0%, #EDEEFF 30%, #F8F5FF 60%, #FBFAFF 100%)",
@@ -292,18 +292,19 @@ export default function HomeContent() {
                 </div>
 
                 {/* Right: 40% icon — double-bezel with float animation */}
-                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%" }}>
+                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%", minWidth: 0 }}>
                   {/* Outer tray — visible frame */}
                   <div className="rounded-[20px] p-1.5"
                     style={{
-                      background: "rgba(0,0,0,0.04)",
-                      border: "1px solid rgba(0,0,0,0.06)",
+                      background: "rgba(0,0,0,0.05)",
+                      border: "1px solid rgba(0,0,0,0.08)",
                       animation: "icon-float 5s ease-in-out infinite",
+                      maxWidth: "100%",
                     }}>
                     {/* Inner glass plate */}
                     <div className="flex items-center justify-center select-none rounded-[14px] overflow-hidden"
                       style={{
-                        width: "320px", height: "200px",
+                        width: "min(320px, 100%)", height: "200px",
                         background: "rgba(255,255,255,0.55)",
                         backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
                         border: "1px solid rgba(255,255,255,0.7)",
