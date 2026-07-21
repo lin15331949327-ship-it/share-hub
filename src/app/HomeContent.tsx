@@ -160,48 +160,112 @@ export default function HomeContent() {
           {search && <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded-md" style={{ color: "var(--color-text-muted)" }}>清除</button>}
         </div>
 
-        {/* Hero — responsive: stack on mobile, split on desktop */}
+        {/* Hero Banner */}
         {featured && isHome && (
           <ScrollReveal>
-            <div className="p-1.5 sm:p-2 rounded-[var(--radius-xl)] sm:rounded-[var(--radius-2xl)]" style={{ background: "linear-gradient(135deg, #F0F4FF 0%, #F8F6FF 50%, #FDFAFF 100%)", border: "1px solid rgba(0,0,0,0.05)" }}>
-              <div className="relative rounded-[calc(var(--radius-xl)-2px)] sm:rounded-[calc(var(--radius-2xl)-4px)] overflow-hidden"
-                style={{ padding: "24px", background: "rgba(255,255,255,0.5)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}>
-                <div className="absolute pointer-events-none" style={{ top: "-30%", right: "-5%", width: "460px", height: "460px", borderRadius: "50%", background: "radial-gradient(circle, rgba(79,124,255,0.10) 0%, transparent 70%)" }} />
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-                  <div className="flex-1 sm:max-w-[58%]" style={{ maxWidth: "100%" }}>
-                    <span className="inline-block rounded-full px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold tracking-[0.18em] uppercase mb-3 sm:mb-5" style={{ background: "var(--color-accent)", color: "#fff" }}>今日推荐</span>
-                    <h2 className="tracking-tight mb-1.5 sm:mb-2 text-[28px] sm:text-[44px]" style={{ fontWeight: 800, lineHeight: 1.15, letterSpacing: "-0.02em", color: "var(--color-text)", fontFamily: "var(--font-display)" }}>{featured.name}</h2>
-                    {(featured.subtitle || featured.description) && (
-                      <p className="mb-5 sm:mb-8 line-clamp-2" style={{ fontSize: "15px", lineHeight: 1.5, color: "var(--color-text-soft)" }}>
-                        {featured.subtitle || stripHtml(featured.description)}
-                      </p>
-                    )}
-                    <div className="flex gap-2.5 sm:gap-3">
-                      <a href={featured.link} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 sm:gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm font-semibold transition-all"
-                        style={{ background: "var(--color-accent)", color: "#fff", transition: "transform 200ms var(--ease-spring), box-shadow 200ms var(--ease-spring)" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(37,99,235,0.28)"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
-                        立即打开
-                        <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-transform" style={{ background: "rgba(255,255,255,0.2)" }}>
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6" /></svg>
-                        </span>
-                      </a>
-                      <Link href={`/resource/${featured.id}`} className="group inline-flex items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm font-semibold transition-all"
-                        style={{ background: "#fff", color: "var(--color-text)", border: "1.5px solid var(--color-border)", transition: "all 200ms var(--ease-spring)" }}>
-                        查看详情
-                      </Link>
-                    </div>
+            <div className="relative overflow-hidden rounded-[28px]"
+              style={{
+                minHeight: "320px",
+                background: "linear-gradient(135deg, #F6F7FF 0%, #FBFAFF 100%)",
+                boxShadow: "0 20px 60px rgba(79,124,255,0.08)",
+                border: "1px solid rgba(0,0,0,0.04)",
+                padding: "48px",
+              }}>
+              {/* Radial glow */}
+              <div className="absolute pointer-events-none"
+                style={{
+                  top: "-20%", right: "-8%",
+                  width: "480px", height: "480px", borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(79,124,255,0.12) 0%, rgba(200,180,255,0.04) 40%, transparent 70%)",
+                }} />
+              {/* Secondary smaller glow */}
+              <div className="absolute pointer-events-none"
+                style={{
+                  bottom: "-30%", left: "10%",
+                  width: "300px", height: "300px", borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(79,124,255,0.06) 0%, transparent 60%)",
+                }} />
+
+              <div className="relative z-10 flex items-center h-full gap-8" style={{ minHeight: "224px" }}>
+                {/* Left: 60% text */}
+                <div style={{ flex: "0 0 60%", maxWidth: "60%" }}>
+                  <span className="inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase mb-5"
+                    style={{ background: "var(--color-accent)", color: "#fff", fontFamily: "var(--font-body)" }}>
+                    今日推荐
+                  </span>
+                  <h2 style={{
+                    fontSize: "42px", fontWeight: 800, lineHeight: 1.12, letterSpacing: "-0.02em",
+                    color: "var(--color-text)", fontFamily: "var(--font-display)", marginBottom: "10px",
+                  }}>
+                    {featured.name}
+                  </h2>
+                  {(featured.subtitle || featured.description) && (
+                    <p style={{
+                      fontSize: "16px", lineHeight: 1.6, color: "var(--color-text-soft)",
+                      maxWidth: "460px", marginBottom: "28px",
+                    }} className="line-clamp-2">
+                      {featured.subtitle || stripHtml(featured.description)}
+                    </p>
+                  )}
+                  <div className="flex gap-3">
+                    {/* Primary: blue pill with nested icon */}
+                    <a href={featured.link} target="_blank" rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all select-none"
+                      style={{
+                        background: "var(--color-accent)", color: "#fff",
+                        transition: "transform 200ms var(--ease-spring), box-shadow 200ms var(--ease-spring)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 8px 24px rgba(37,99,235,0.30)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}>
+                      立即打开
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-px"
+                        style={{ background: "rgba(255,255,255,0.18)" }}>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6" />
+                        </svg>
+                      </span>
+                    </a>
+                    {/* Secondary: white outline */}
+                    <Link href={`/resource/${featured.id}`}
+                      className="group inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all select-none"
+                      style={{
+                        background: "rgba(255,255,255,0.7)", color: "var(--color-text)",
+                        border: "1.5px solid rgba(0,0,0,0.08)", backdropFilter: "blur(4px)",
+                        transition: "all 200ms var(--ease-spring)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "var(--color-accent)";
+                        e.currentTarget.style.color = "var(--color-accent)";
+                        e.currentTarget.style.background = "#fff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(0,0,0,0.08)";
+                        e.currentTarget.style.color = "var(--color-text)";
+                        e.currentTarget.style.background = "rgba(255,255,255,0.7)";
+                      }}>
+                      查看详情
+                    </Link>
                   </div>
-                  <div className="flex sm:hidden shrink-0 justify-center mt-2">
-                    <div className="flex items-center justify-center select-none rounded-[20px]" style={{ width: "100px", height: "100px", background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.8)" }}>
+                </div>
+
+                {/* Right: 40% icon area — double-bezel */}
+                <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%" }}>
+                  <div className="rounded-[24px] p-1.5" style={{ background: "rgba(0,0,0,0.03)" }}>
+                    <div className="flex items-center justify-center select-none rounded-[calc(24px-6px)] overflow-hidden"
+                      style={{
+                        width: "320px", height: "200px",
+                        background: "rgba(255,255,255,0.55)",
+                        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                        border: "1px solid rgba(255,255,255,0.7)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+                      }}>
                       <HeroFavicon link={featured.link} fallback={cMap.get(featured.category)?.icon || "📦"} />
-                    </div>
-                  </div>
-                  <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ width: "42%" }}>
-                    <div className="rounded-[var(--radius-2xl)] p-1" style={{ background: "rgba(0,0,0,0.03)" }}>
-                      <div className="flex items-center justify-center select-none rounded-[calc(var(--radius-2xl)-4px)]" style={{ width: "300px", height: "180px", background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)", overflow: "hidden" }}>
-                        <HeroFavicon link={featured.link} fallback={cMap.get(featured.category)?.icon || "📦"} />
-                      </div>
                     </div>
                   </div>
                 </div>
