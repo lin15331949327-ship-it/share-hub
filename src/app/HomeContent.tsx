@@ -61,8 +61,20 @@ export default function HomeContent() {
     return list;
   }, [resources, categories, activeCategory, search]);
 
-  const featured = display.find((r) => r.featured) || display[0];
   const isHome = !activeCategory && !search;
+
+  // Carousel: cycle through display resources every 5s
+  const [slideIdx, setSlideIdx] = useState(0);
+  useEffect(() => {
+    if (!isHome || display.length <= 1) return;
+    const t = setInterval(() => setSlideIdx((i) => (i + 1) % Math.min(display.length, 5)), 5000);
+    return () => clearInterval(t);
+  }, [isHome, display.length]);
+  // reset when display changes
+  useEffect(() => { setSlideIdx(0); }, [display.length]);
+
+  const featured = display.find((r) => r.featured) || display[slideIdx] || display[0];
+  const totalSlides = Math.min(display.length, 5);
 
   // recent = last 4 by time
   const recent = useMemo(() => {
@@ -278,14 +290,16 @@ export default function HomeContent() {
                   </div>
                 </div>
 
-                {/* Right: 40% icon — with subtle float animation */}
+                {/* Right: 40% icon — double-bezel with float animation */}
                 <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%" }}>
-                  <div className="rounded-[24px] p-1.5"
+                  {/* Outer tray */}
+                  <div className="rounded-[20px] p-1.5"
                     style={{
                       background: "rgba(0,0,0,0.03)",
                       animation: "icon-float 5s ease-in-out infinite",
                     }}>
-                    <div className="flex items-center justify-center select-none rounded-[calc(24px-6px)] overflow-hidden"
+                    {/* Inner glass plate */}
+                    <div className="flex items-center justify-center select-none rounded-[14px] overflow-hidden"
                       style={{
                         width: "320px", height: "200px",
                         background: "rgba(255,255,255,0.55)",
@@ -297,14 +311,41 @@ export default function HomeContent() {
                     </div>
                   </div>
                 </div>
+                {/* Mobile icon — smaller, below text */}
+                <div className="flex sm:hidden shrink-0 justify-center mt-4">
+                  <div className="rounded-[16px] p-1" style={{ background: "rgba(0,0,0,0.03)" }}>
+                    <div className="flex items-center justify-center select-none rounded-[12px]"
+                      style={{
+                        width: "120px", height: "120px",
+                        background: "rgba(255,255,255,0.55)",
+                        border: "1px solid rgba(255,255,255,0.7)",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
+                      }}>
+                      <span style={{ fontSize: "48px" }}>{cMap.get(featured.category)?.icon || "📦"}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* --- Bottom indicator dots --- */}
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                <div className="w-2 h-2 rounded-full" style={{ background: "var(--color-accent)", boxShadow: "0 0 6px rgba(37,99,235,0.4)" }} />
-                <div className="w-2 h-2 rounded-full" style={{ background: "rgba(0,0,0,0.10)" }} />
-                <div className="w-2 h-2 rounded-full" style={{ background: "rgba(0,0,0,0.10)" }} />
-              </div>
+              {totalSlides > 1 && (
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  {Array.from({ length: totalSlides }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSlideIdx(i)}
+                      className="w-2 h-2 rounded-full transition-all"
+                      style={{
+                        background: i === slideIdx ? "var(--color-accent)" : "rgba(0,0,0,0.10)",
+                        boxShadow: i === slideIdx ? "0 0 6px rgba(37,99,235,0.4)" : "none",
+                        transition: "all 300ms var(--ease-spring)",
+                        transform: i === slideIdx ? "scale(1.3)" : "scale(1)",
+                        border: "none", cursor: "pointer",
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </ScrollReveal>
         )}
