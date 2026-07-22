@@ -305,8 +305,17 @@ function DesktopSections({ display, cMap, recent, categorySections, selectCat }:
 // Re-use the same card from original (not in shared to keep the file simpler)
 function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
   const tags = Array.isArray(resource.tags) ? resource.tags : [];
+  const desc = resource.description ? stripHtml(resource.description) : "";
   return (
-    <Link href={`/resource/${resource.id}`} className="block group outline-none" style={{ textDecoration: "none" }}>
+    <Link href={`/resource/${resource.id}`} className="block group/card outline-none relative" style={{ textDecoration: "none" }}>
+      {/* Hover tooltip — description */}
+      {desc && (
+        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 rounded-xl text-xs leading-relaxed max-w-[320px] pointer-events-none opacity-0 group-hover/card:opacity-100 transition-opacity duration-200"
+          style={{ background: "var(--color-text)", color: "#fff", boxShadow: "0 4px 20px rgba(0,0,0,0.18)" }}>
+          {desc.slice(0, 200)}
+          {desc.length > 200 && "…"}
+        </div>
+      )}
       <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
         style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}
         onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-accent-ring)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-card-hover)"; }}
@@ -320,7 +329,7 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
                 <h3 className="font-semibold truncate" style={{ fontSize: "15px", color: "var(--color-text)" }}>{resource.name}</h3>
                 {resource.featured && <span className="shrink-0" style={{ color: "var(--color-accent)", fontSize: "13px" }}>★</span>}
               </div>
-              <p className="text-xs mt-0.5 truncate" style={{ color: "var(--color-text-muted)" }}>{resource.subtitle || ""}</p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: "var(--color-text-muted)" }}>{resource.subtitle || desc.slice(0, 40) || ""}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 items-center">
