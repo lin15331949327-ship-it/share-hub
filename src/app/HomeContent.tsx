@@ -117,7 +117,7 @@ function DesktopView({ data }: { data: ReturnType<typeof useHomeData> }) {
       </div>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex shrink-0 flex-col gap-1 sticky top-28 self-start" style={{ width: "220px" }}>
+      <aside className="hidden lg:flex shrink-0 flex-col gap-1 sticky top-20 self-start" style={{ width: "220px" }}>
         <div className="rounded-[var(--radius-xl)] overflow-hidden" style={{ background: "#fff", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-xs)" }}>
           <div className="px-4 pt-4 pb-2">
             <p className="text-[11px] font-semibold tracking-[0.12em] uppercase" style={{ color: "var(--color-text-muted)" }}>分类</p>
@@ -308,11 +308,13 @@ function ResourceCard({ resource, category }: { resource: Resource; category?: C
   const subtitle = resource.subtitle || "";
   return (
     <Link href={`/resource/${resource.id}`} className="block group/card outline-none relative" style={{ textDecoration: "none" }}>
-      {/* Hover tooltip — full subtitle when truncated */}
+      {/* Hover tooltip — full subtitle */}
       {subtitle && (
-        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg text-xs leading-relaxed max-w-[260px] pointer-events-none opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 whitespace-nowrap"
-          style={{ background: "var(--color-text)", color: "#fff", boxShadow: "0 4px 16px rgba(0,0,0,0.16)" }}>
+        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-3 px-3.5 py-2 rounded-xl text-xs leading-relaxed max-w-[280px] pointer-events-none opacity-0 group-hover/card:opacity-100 transition-all duration-200 text-center"
+          style={{ background: "var(--color-text)", color: "#fff", boxShadow: "0 8px 32px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)" }}>
           {subtitle}
+          {/* arrow */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent" style={{ borderTopColor: "var(--color-text)" }} />
         </div>
       )}
       <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
