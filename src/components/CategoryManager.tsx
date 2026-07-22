@@ -33,15 +33,15 @@ export default function CategoryManager({ onUpdate }: Props) {
   }
 
   async function saveOrder(list: Category[]) {
-    // Reindex order based on array position
-    const updated = list.map((cat, i) => ({ ...cat, order: i }));
+    // Reindex sortWeight based on array position
+    const updated = list.map((cat, i) => ({ ...cat, sortWeight: i }));
     setCategories(updated);
-    // Persist each category's new order
+    // Persist each category's new sortWeight
     await Promise.all(updated.map((cat, i) =>
       fetch("/api/categories", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: cat.id, order: i }),
+        body: JSON.stringify({ id: cat.id, sortWeight: i }),
       })
     ));
     onUpdate?.();
