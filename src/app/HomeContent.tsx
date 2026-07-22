@@ -157,6 +157,39 @@ function DesktopView({ data }: { data: ReturnType<typeof useHomeData> }) {
             })}
           </div>
         </div>
+
+        {/* Quick actions */}
+        <div className="rounded-[var(--radius-xl)] overflow-hidden mt-2" style={{ background: "#fff", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-xs)" }}>
+          <div className="px-4 pt-4 pb-2">
+            <p className="text-[11px] font-semibold tracking-[0.12em] uppercase" style={{ color: "var(--color-text-muted)" }}>操作</p>
+          </div>
+          <div className="px-2 pb-2">
+            <a href="/admin/resources/new"
+              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm transition-all"
+              style={{ color: "var(--color-text-soft)", textDecoration: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-paper-2)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              提交
+            </a>
+            <a href="/admin/resources"
+              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm transition-all"
+              style={{ color: "var(--color-text-soft)", textDecoration: "none" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-paper-2)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192" /></svg>
+              管理
+            </a>
+            <button onClick={async () => { await fetch("/api/auth", { method: "DELETE" }); window.location.href = "/"; }}
+              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm transition-all"
+              style={{ color: "var(--color-text-muted)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-paper-2)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+              退出
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Main */}
