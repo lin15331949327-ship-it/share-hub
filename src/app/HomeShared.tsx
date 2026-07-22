@@ -99,6 +99,7 @@ export function useHomeData() {
 
   function selectCat(id: string | null) {
     setActiveCategory(id);
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     const sp = new URLSearchParams(window.location.search);
     if (id) sp.set("cat", id); else sp.delete("cat");
     const qs = sp.toString();
