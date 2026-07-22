@@ -92,7 +92,7 @@ function DesktopView({ data }: { data: ReturnType<typeof useHomeData> }) {
   } = data;
 
   return (
-    <div className="flex gap-8" style={{ paddingTop: "24px" }}>
+    <div className="flex gap-8" style={{ paddingTop: "24px", minHeight: "calc(100vh - 24px)" }}>
       {/* Mobile category pills */}
       <div className="lg:hidden w-full -mx-2 px-2 overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 pb-1" style={{ minWidth: "max-content" }}>
