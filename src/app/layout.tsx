@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { seed } from "@/lib/seed";
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
+import { DeviceProvider } from "./DeviceProvider";
 import "./globals.css";
 
 const geist = Geist({
@@ -22,14 +24,20 @@ export const metadata: Metadata = {
   description: "极简资源共享站",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
+  const ua = headersList.get("user-agent") || "";
+  const device = /Mobile|Android|iPhone|iPad|iPod/i.test(ua) ? "mobile" as const : "desktop" as const;
+
   return (
     <html lang="zh-CN" className={`${geist.variable} ${geistMono.variable}`}>
       <body className="min-h-screen antialiased" style={{ background: "#fafafa" }}>
-        <AuthGuard>
-          <Navbar />
-          <main className="max-w-6xl mx-auto px-6 pb-24 pt-4">{children}</main>
-        </AuthGuard>
+        <DeviceProvider device={device}>
+          <AuthGuard>
+            <Navbar />
+            <main className="max-w-6xl mx-auto px-6 pb-24 pt-4">{children}</main>
+          </AuthGuard>
+        </DeviceProvider>
         <SeedRunner />
       </body>
     </html>

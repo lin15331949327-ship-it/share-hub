@@ -5,12 +5,16 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useHomeData, FaviconIcon, HeroFavicon, ScrollReveal, SectionHeading, Empty, stripHtml } from "./HomeShared";
 import MobileLayout from "./MobileLayout";
+import { useDevice } from "./DeviceProvider";
 import type { Resource, Category } from "@/lib/types";
 import { getFaviconSources } from "@/lib/favicon";
 
 export default function HomeContent() {
   const sp = useSearchParams();
-  const isMobile = sp.get("view") === "mobile";
+  const viewParam = sp.get("view");
+  const detectedDevice = useDevice();
+  // ?view=mobile → mobile; ?view=desktop → desktop; no param → auto-detect
+  const isMobile = viewParam === "mobile" || (viewParam !== "desktop" && detectedDevice === "mobile");
   const data = useHomeData();
 
   if (data.loading) {
