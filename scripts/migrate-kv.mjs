@@ -32,10 +32,17 @@ async function main() {
     if (db.prepare("SELECT id FROM resources WHERE id=?").get(id)) continue;
     const { result: r } = await kvCmd("get", `resource:${id}`);
     if (!r) continue;
-    db.prepare("INSERT INTO resources VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").run(
-      r.id, r.name, r.subtitle||"", r.description||"", r.link||"", r.category, JSON.stringify(r.tags||[]),
-      r.createdBy, r.createdAt, r.displayOrder||0, r.featured?1:0, r.deletedAt||null);
-    n++;
+    try {
+      const vals = [
+        String(r.id||""), String(r.name||""), String(r.subtitle||""), String(r.description||""), String(r.link||""),
+        String(r.category||""), JSON.stringify(r.tags||[]),
+        String(r.createdBy||"admin"), Number(r.createdAt||0), Number(r.displayOrder||0), r.featured?1:0, r.deletedAt?Number(r.deletedAt):null
+      ];
+      db.prepare("INSERT INTO resources VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").run(...vals);
+      n++;
+    } catch(e) {
+      console.error(`Error on resource ${id}:`, e.message);
+    }
   }
   console.log(`Migrated ${n}`);
 
