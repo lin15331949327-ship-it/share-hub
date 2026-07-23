@@ -237,7 +237,7 @@ function GreetingHeader({ onLogout }: { onLogout: () => void }) {
         <h1 className="text-2xl font-bold tracking-tight mt-0.5" style={{ fontFamily: "var(--font-display)" }}>
           ShareHub
         </h1>
-        <p className="text-[13px] mt-1 text-balance" style={{ color: T.soft }}>小圈子，大资源。</p>
+        <p className="text-[13px] mt-1 text-balance" style={{ color: T.soft }}>帅比都在用...</p>
       </div>
       <button onClick={onLogout}
         className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all active:scale-90"
