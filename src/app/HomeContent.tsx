@@ -14,8 +14,22 @@ export default function HomeContent() {
   const sp = useSearchParams();
   const viewParam = sp.get("view");
   const detectedDevice = useDevice();
-  // ?view=mobile → mobile; ?view=desktop → desktop; no param → auto-detect
-  const isMobile = viewParam === "mobile" || (viewParam !== "desktop" && detectedDevice === "mobile");
+
+  // Track window width for auto-switch (SSR-safe: defaults to 0, measured in effect)
+  const [winW, setWinW] = useState(0);
+  useEffect(() => {
+    const onResize = () => setWinW(window.innerWidth);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // ?view=mobile → force mobile; ?view=desktop → force desktop
+  // No param → auto: initial UA detection, then live window width (<768px → mobile)
+  const isMobile =
+    viewParam === "mobile" ||
+    (viewParam !== "desktop" &&
+      (winW === 0 ? detectedDevice === "mobile" : winW < 768));
   const data = useHomeData();
 
   if (data.loading) {
