@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import LinkExtension from "@tiptap/extension-link";
 import { ResizableImage } from "@/lib/resizableImageExtension";
 import { VideoExtension } from "@/lib/videoExtension";
 import { parseVideoLink } from "@/lib/embed";
@@ -34,7 +33,6 @@ export default function ResourceForm({ categories, resource }: Props) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-      LinkExtension.configure({ openOnClick: false }),
       ResizableImage.configure({ allowBase64: false }),
       VideoExtension,
     ],

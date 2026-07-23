@@ -1,9 +1,9 @@
-// ShareHub Service Worker — stale-while-revalidate for navigation, cache-first for static
+// ShareHub Service Worker — stale-while-revalidate for same-origin static assets
 const CACHE = "sharehub-v1";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(["/"]))
+    caches.open(CACHE).then((c) => c.addAll(["/"]).catch(() => {}))
   );
   self.skipWaiting();
 });
@@ -18,11 +18,11 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
-  // Only cache GET
+  // Only handle same-origin GET requests
   if (e.request.method !== "GET") return;
-
-  // Skip API calls — let them hit the network
-  if (e.request.url.includes("/api/")) return;
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/")) return;
 
   e.respondWith(
     caches.match(e.request).then((cached) => {
@@ -32,7 +32,7 @@ self.addEventListener("fetch", (e) => {
           caches.open(CACHE).then((c) => c.put(e.request, clone));
         }
         return res;
-      });
+      }).catch(() => cached || new Response("", { status: 504 }));
       return cached || fetched;
     })
   );
