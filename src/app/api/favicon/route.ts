@@ -13,6 +13,8 @@ const SOURCES = (domain: string) => [
   { url: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`, label: "google" },
   { url: `https://icons.duckduckgo.com/ip3/${domain}.ico`, label: "ddg" },
   { url: `https://${domain}/favicon.ico`, label: "direct" },
+  // Fallback: proxy through Vercel (outside GFW) if running on Alibaba ECS
+  { url: `https://share.linxiaoxiao111.dpdns.org/api/favicon?domain=${domain}`, label: "vercel" },
 ];
 
 export async function GET(req: NextRequest) {
