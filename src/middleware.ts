@@ -5,8 +5,8 @@ import { verifyToken } from "./lib/auth";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Auth endpoint is public
-  if (pathname === "/api/auth") return NextResponse.next();
+  // Public endpoints
+  if (pathname === "/api/auth" || pathname === "/api/webhook") return NextResponse.next();
 
   // GET requests are public (AuthGuard handles page protection)
   if (request.method === "GET") return NextResponse.next();
