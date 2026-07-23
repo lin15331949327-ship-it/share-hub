@@ -151,21 +151,33 @@ export function ScrollReveal({ children, delay = 0 }: { children: React.ReactNod
 export function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
-  if (sources.length === 0 || srcIdx >= sources.length) return <span style={{ fontSize: "72px" }}>{fallback}</span>;
-  return <img src={sources[srcIdx]} alt="" className="w-20 h-20 object-contain" loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />;
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 80, height: 80 }}>
+      <span style={{ position: "absolute", fontSize: 72, lineHeight: 1 }}>{fallback}</span>
+      {srcIdx < sources.length && (
+        <img src={sources[srcIdx]} alt=""
+          style={{ position: "relative", zIndex: 1, width: 80, height: 80, objectFit: "contain", background: "transparent" }}
+          loading="lazy"
+          onError={() => setSrcIdx((i) => i + 1)}
+          onLoad={(e) => { if (e.currentTarget.naturalWidth < 8) setSrcIdx((i) => i + 1); }} />
+      )}
+    </span>
+  );
 }
 
 export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
-  const hasSource = sources.length > 0 && srcIdx < sources.length;
   return (
     <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
-      style={{ background: "var(--color-paper-2)", overflow: "hidden" }}>
-      {hasSource ? (
-        <img src={sources[srcIdx]} alt={alt} className="w-7 h-7 object-contain" loading="lazy" onError={() => setSrcIdx((i) => i + 1)} />
-      ) : (
-        <span className="text-xl">{fallback}</span>
+      style={{ background: "var(--color-paper-2)", overflow: "hidden", position: "relative" }}>
+      <span className="text-xl" style={{ position: "absolute" }}>{fallback}</span>
+      {srcIdx < sources.length && (
+        <img src={sources[srcIdx]} alt={alt}
+          style={{ position: "relative", zIndex: 1, width: 28, height: 28, objectFit: "contain", background: "transparent" }}
+          loading="lazy"
+          onError={() => setSrcIdx((i) => i + 1)}
+          onLoad={(e) => { if (e.currentTarget.naturalWidth < 8) setSrcIdx((i) => i + 1); }} />
       )}
     </div>
   );
