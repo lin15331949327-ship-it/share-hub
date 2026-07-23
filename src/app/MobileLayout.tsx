@@ -528,7 +528,7 @@ function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallb
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20 }}>
       {!loaded && <span style={{ position: "absolute", fontSize: 16, lineHeight: 1 }}>{fallback}</span>}
-      {!loaded && srcIdx < sources.length && (
+      {srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt={alt}
           style={{ position: "relative", zIndex: 1, width: 20, height: 20, objectFit: "contain", background: "transparent" }}
           onError={advance}
@@ -547,7 +547,7 @@ function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40 }}>
       {!loaded && <span style={{ position: "absolute", fontSize: 32, lineHeight: 1 }}>{fallback}</span>}
-      {!loaded && srcIdx < sources.length && (
+      {srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt=""
           style={{ position: "relative", zIndex: 1, width: 40, height: 40, objectFit: "contain", background: "transparent" }}
           onError={advance}

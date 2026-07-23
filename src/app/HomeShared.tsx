@@ -158,7 +158,7 @@ export function HeroFavicon({ link, fallback }: { link: string; fallback: string
       {!loaded && (
         <span style={{ position: "absolute", fontSize: 72, lineHeight: 1 }}>{fallback}</span>
       )}
-      {!loaded && srcIdx < sources.length && (
+      {srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt=""
           style={{ position: "relative", zIndex: 1, width: 80, height: 80, objectFit: "contain", background: "transparent" }}
           loading="lazy"
@@ -195,7 +195,7 @@ export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string
       {!loaded && (
         <span className="text-xl" style={{ position: "absolute" }}>{fallback}</span>
       )}
-      {!loaded && srcIdx < sources.length && (
+      {srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt={alt}
           style={{ position: "relative", zIndex: 1, width: 28, height: 28, objectFit: "contain", background: "transparent" }}
           loading="lazy"
