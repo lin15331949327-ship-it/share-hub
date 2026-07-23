@@ -17,7 +17,6 @@
     "@tiptap/starter-kit": "^3.28.0",
     "@vercel/blob": "^2.6.1",
     "@vercel/kv": "^2.0.0",
-    "better-sqlite3": "^13.0.1",
     "geist": "^1.7.2",
     "jose": "^6.2.3",
     "next": "16.2.10",
@@ -34,5 +33,8 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^13.0.1"
   }
 }
