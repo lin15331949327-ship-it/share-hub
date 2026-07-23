@@ -140,9 +140,16 @@ export function HeroFavicon({ link, fallback }: { link: string; fallback: string
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Reset when link changes (carousel switches to a different resource)
   useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+
+  // Handle hydration case: img may have loaded before React attached onLoad
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth >= 8) setLoaded(true);
+  });
 
   function advance() {
     if (srcIdx + 1 >= sources.length) {
@@ -154,12 +161,11 @@ export function HeroFavicon({ link, fallback }: { link: string; fallback: string
 
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 80, height: 80 }}>
-      {/* Emoji: visible while loading OR after all sources failed */}
       {!loaded && (
         <span style={{ position: "absolute", fontSize: 72, lineHeight: 1 }}>{fallback}</span>
       )}
       {srcIdx < sources.length && (
-        <img src={sources[srcIdx]} alt=""
+        <img ref={imgRef} src={sources[srcIdx]} alt=""
           style={{ position: "relative", zIndex: 1, width: 80, height: 80, objectFit: "contain", background: "transparent" }}
           loading="lazy"
           onError={advance}
@@ -176,9 +182,16 @@ export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Reset when link changes
   useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+
+  // Handle hydration case: img may have loaded before React attached onLoad
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth >= 8) setLoaded(true);
+  });
 
   function advance() {
     if (srcIdx + 1 >= sources.length) {
@@ -191,12 +204,11 @@ export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string
   return (
     <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
       style={{ background: "var(--color-paper-2)", overflow: "hidden", position: "relative" }}>
-      {/* Emoji: visible while loading OR after all sources failed */}
       {!loaded && (
         <span className="text-xl" style={{ position: "absolute" }}>{fallback}</span>
       )}
       {srcIdx < sources.length && (
-        <img src={sources[srcIdx]} alt={alt}
+        <img ref={imgRef} src={sources[srcIdx]} alt={alt}
           style={{ position: "relative", zIndex: 1, width: 28, height: 28, objectFit: "contain", background: "transparent" }}
           loading="lazy"
           onError={advance}

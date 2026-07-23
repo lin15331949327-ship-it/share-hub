@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { stripHtml } from "./HomeShared";
 import { getFaviconSources } from "@/lib/favicon";
@@ -523,13 +523,15 @@ function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallb
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+  useEffect(() => { const img = imgRef.current; if (img?.complete && img.naturalWidth >= 6) setLoaded(true); });
   function advance() { if (srcIdx + 1 >= sources.length) setLoaded(false); else setSrcIdx((i) => i + 1); }
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20 }}>
       {!loaded && <span style={{ position: "absolute", fontSize: 16, lineHeight: 1 }}>{fallback}</span>}
       {srcIdx < sources.length && (
-        <img src={sources[srcIdx]} alt={alt}
+        <img ref={imgRef} src={sources[srcIdx]} alt={alt}
           style={{ position: "relative", zIndex: 1, width: 20, height: 20, objectFit: "contain", background: "transparent" }}
           onError={advance}
           onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) advance(); else setLoaded(true); }} />
@@ -542,13 +544,15 @@ function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+  useEffect(() => { const img = imgRef.current; if (img?.complete && img.naturalWidth >= 6) setLoaded(true); });
   function advance() { if (srcIdx + 1 >= sources.length) setLoaded(false); else setSrcIdx((i) => i + 1); }
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40 }}>
       {!loaded && <span style={{ position: "absolute", fontSize: 32, lineHeight: 1 }}>{fallback}</span>}
       {srcIdx < sources.length && (
-        <img src={sources[srcIdx]} alt=""
+        <img ref={imgRef} src={sources[srcIdx]} alt=""
           style={{ position: "relative", zIndex: 1, width: 40, height: 40, objectFit: "contain", background: "transparent" }}
           onError={advance}
           onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) advance(); else setLoaded(true); }} />
