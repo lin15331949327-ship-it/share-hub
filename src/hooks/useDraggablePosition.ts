@@ -86,12 +86,13 @@ export function useDraggablePosition<T extends HTMLElement = HTMLDivElement>(opt
     offset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     el.style.cursor = "grabbing";
     el.style.transition = "none";
-    // Switch from centered if needed (transform-based positioning)
-    if (el.style.transform) {
-      el.style.transform = "none";
-      el.style.left = rect.left + "px";
-      el.style.top = rect.top + "px";
-    }
+    // Always capture current rect as inline left/top so onPointerMove
+    // can compare positions correctly (even CSS-positioned elements)
+    el.style.transform = "none";
+    el.style.right = "auto";
+    el.style.bottom = "auto";
+    el.style.left = rect.left + "px";
+    el.style.top = rect.top + "px";
     el.setPointerCapture(e.pointerId);
   }, []);
 
