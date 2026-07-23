@@ -3,20 +3,19 @@
 import { useState, useEffect, useMemo } from "react";
 import type { Category } from "@/lib/types";
 
-/**
- * Fetch categories once on mount.
- * Provides pre-computed catMap and sidebarCats for consumers.
- */
+// Module-level cache — survives client-side back-navigation.
+let _cache: Category[] | null = null;
+
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>(_cache || []);
+  const loading = !_cache;
 
   useEffect(() => {
     fetch("/api/categories")
       .then((r) => r.json())
       .then((data) => {
+        _cache = data;
         setCategories(data);
-        setLoading(false);
       });
   }, []);
 

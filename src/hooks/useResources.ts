@@ -3,20 +3,20 @@
 import { useState, useEffect } from "react";
 import type { Resource } from "@/lib/types";
 
-/**
- * Fetch all resources once on mount.
- * Returns raw data only — filtering/sorting is done by pure functions elsewhere.
- */
+// Module-level cache — survives client-side back-navigation.
+// On first load: fetch + cache. On back-navigation: instant from cache, then refresh.
+let _cache: Resource[] | null = null;
+
 export function useResources() {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [resources, setResources] = useState<Resource[]>(_cache || []);
+  const loading = !_cache;
 
   useEffect(() => {
     fetch("/api/resources")
       .then((r) => r.json())
       .then((data) => {
+        _cache = data;
         setResources(data);
-        setLoading(false);
       });
   }, []);
 
