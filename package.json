@@ -17,6 +17,7 @@
     "@tiptap/starter-kit": "^3.28.0",
     "@vercel/blob": "^2.6.1",
     "@vercel/kv": "^2.0.0",
+    "better-sqlite3": "^13.0.1",
     "geist": "^1.7.2",
     "jose": "^6.2.3",
     "next": "16.2.10",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
