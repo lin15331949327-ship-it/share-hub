@@ -7,28 +7,22 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("x-hub-signature-256");
   const body = await req.text();
 
-  // Verify signature
+  // Verify GitHub signature
   if (sig) {
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey("raw", encoder.encode(SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
-    const valid = await crypto.subtle.verify("HMAC", key, hexToBytes(sig.replace("sha256=", "")), encoder.encode(body));
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+    const sigBytes = Buffer.from(sig.replace("sha256=", ""), "hex");
+    const valid = await crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(body));
     if (!valid) return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
   }
 
   const event = req.headers.get("x-github-event");
   if (event !== "push") return NextResponse.json({ ok: true, skipped: true });
 
-  // Run deploy in background
+  // Deploy in background — don't block the response
   exec("cd /home/admin/share-hub && git pull && npm install --prefer-offline 2>&1 | tail -1 && npm run build 2>&1 | tail -3 && sudo systemctl restart share-hub", (err, stdout) => {
-    console.log("[webhook] deploy:", err ? `FAIL: ${err.message}` : "OK");
-    if (stdout) console.log("[webhook]", stdout);
+    if (err) console.error("[webhook] FAIL:", err.message);
+    else console.log("[webhook] OK", stdout);
   });
 
   return NextResponse.json({ ok: true });
-}
-
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-  return bytes;
 }
