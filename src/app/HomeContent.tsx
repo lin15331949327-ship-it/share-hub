@@ -3,11 +3,12 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useHomeData, FaviconIcon, HeroFavicon, ScrollReveal, SectionHeading, Empty, stripHtml } from "./HomeShared";
+import { useHomeData, HeroFavicon, ScrollReveal, SectionHeading, Empty, stripHtml } from "./HomeShared";
 import MobileLayout from "./MobileLayout";
+import ResourceCard from "@/components/ResourceCard";
 import { useDevice } from "./DeviceProvider";
+import { useDraggablePosition } from "@/hooks/useDraggablePosition";
 import type { Resource, Category } from "@/lib/types";
-import { getFaviconSources } from "@/lib/favicon";
 
 export default function HomeContent() {
   const sp = useSearchParams();
@@ -240,7 +241,7 @@ function DesktopView({ data }: { data: ReturnType<typeof useHomeData> }) {
                 <div className="hidden sm:flex shrink-0 items-center justify-center" style={{ flex: "0 0 40%", minWidth: 0 }}>
                   <div className="rounded-[20px] p-2" style={{ background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)", animation: "icon-float 5s ease-in-out infinite" }}>
                     <div className="flex items-center justify-center select-none rounded-[12px]" style={{ width: "320px", height: "200px", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.7)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}>
-                      <HeroFavicon link={featured.link} fallback={cMap.get(featured.category)?.icon || "📦"} />
+                      <HeroFavicon key={featured.id} link={featured.link} fallback={cMap.get(featured.category)?.icon || "📦"} />
                     </div>
                   </div>
                 </div>
@@ -302,113 +303,23 @@ function DesktopSections({ display, cMap, recent, categorySections, selectCat }:
   );
 }
 
-// Re-use the same card from original (not in shared to keep the file simpler)
-function ResourceCard({ resource, category }: { resource: Resource; category?: Category }) {
-  const tags = Array.isArray(resource.tags) ? resource.tags : [];
-  const subtitle = resource.subtitle || "";
-  return (
-    <Link href={`/resource/${resource.id}`} className="block group/card outline-none relative" style={{ textDecoration: "none" }}>
-      {/* Hover tooltip — full subtitle */}
-      {subtitle && (
-        <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-3 px-3.5 py-2 rounded-xl text-xs leading-relaxed max-w-[280px] pointer-events-none opacity-0 group-hover/card:opacity-100 transition-all duration-200 text-center"
-          style={{ background: "var(--color-text)", color: "#fff", boxShadow: "0 8px 32px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08)" }}>
-          {subtitle}
-          {/* arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent" style={{ borderTopColor: "var(--color-text)" }} />
-        </div>
-      )}
-      <div className="rounded-[var(--radius-xl)] p-[1px] h-full transition-all"
-        style={{ background: "var(--color-border)", transition: "all 300ms var(--ease-spring)" }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-accent-ring)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-card-hover)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-border)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)"; }}>
-        <div className="flex flex-col p-5 rounded-[calc(var(--radius-xl)-1px)] transition-all active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-[var(--color-accent-ring)]"
-          style={{ background: "#fff", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6), var(--shadow-sm)", transition: "all 300ms var(--ease-spring)", minHeight: "120px" }}>
-          <div className="flex items-start gap-3 mb-2.5">
-            <FaviconIcon link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
-            <div className="flex-1 min-w-0 pt-0.5">
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-semibold truncate" style={{ fontSize: "15px", color: "var(--color-text)" }}>{resource.name}</h3>
-                {resource.featured && <span className="shrink-0" style={{ color: "var(--color-accent)", fontSize: "13px" }}>★</span>}
-              </div>
-              <p className="text-xs mt-0.5 truncate" style={{ color: "var(--color-text-muted)" }}>{subtitle}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-1.5 items-center">
-            {category && <span className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--color-accent-glow)", color: "var(--color-accent)" }}>{category.name}</span>}
-            {tags.slice(0, 4 - (category ? 1 : 0)).map((tag, i) => <span key={i} className="text-xs px-2 py-0.5 rounded-md" style={{ background: "var(--color-paper-2)", color: "var(--color-text-muted)" }}>{tag}</span>)}
-            {tags.length > (category ? 3 : 4) && <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>+{tags.length - (category ? 3 : 4)}</span>}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
+// ResourceCard is now shared — imported from @/components/ResourceCard
 
 /* ═══ Draggable mode switch button ═══ */
 function DraggableToggle({ isMobile }: { isMobile: boolean }) {
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const dragging = useRef(false);
-  const moved = useRef(false);
-  const offset = useRef({ x: 0, y: 0 });
-
-  /* Restore saved position */
-  useEffect(() => {
-    const el = btnRef.current;
-    if (!el) return;
-    try {
-      const raw = localStorage.getItem("sh-toggle-pos");
-      if (raw) {
-        const { left, top } = JSON.parse(raw);
-        el.style.left = left + "px";
-        el.style.top = top + "px";
-        el.style.right = "auto";
-        el.style.bottom = "auto";
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    const el = btnRef.current;
-    if (!el) return;
-    dragging.current = true;
-    moved.current = false;
-    const rect = el.getBoundingClientRect();
-    offset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    el.style.transition = "none";
-    el.style.right = "auto";
-    el.style.bottom = "auto";
-    el.style.left = rect.left + "px";
-    el.style.top = rect.top + "px";
-    el.setPointerCapture(e.pointerId);
-  }, []);
-
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current || !btnRef.current) return;
-    const el = btnRef.current;
-    const x = e.clientX - offset.current.x;
-    const y = e.clientY - offset.current.y;
-    if (Math.abs(x - parseInt(el.style.left || "0")) > 3 ||
-        Math.abs(y - parseInt(el.style.top || "0")) > 3) {
-      moved.current = true;
-    }
-    el.style.left = Math.max(0, Math.min(x, window.innerWidth - 44)) + "px";
-    el.style.top = Math.max(0, Math.min(y, window.innerHeight - 44)) + "px";
-  }, []);
+  const {
+    elementRef: btnRef,
+    moved,
+    onPointerDown,
+    onPointerMove,
+    finishDrag,
+    persist,
+  } = useDraggablePosition<HTMLButtonElement>({ storageKey: "sh-toggle-pos", elementWidth: 44, elementHeight: 44 });
 
   const onPointerUp = useCallback(() => {
-    const el = btnRef.current;
-    if (!el) return;
-    dragging.current = false;
-    el.style.transition = "all 300ms var(--ease-spring)";
-    if (moved.current) {
-      try {
-        localStorage.setItem("sh-toggle-pos", JSON.stringify({
-          left: parseInt(el.style.left) || 0,
-          top: parseInt(el.style.top) || 0,
-        }));
-      } catch { /* ignore */ }
-    }
-  }, []);
+    const finalPos = finishDrag();
+    if (finalPos) persist(finalPos);
+  }, [finishDrag, persist]);
 
   function toggle() {
     if (moved.current) return;

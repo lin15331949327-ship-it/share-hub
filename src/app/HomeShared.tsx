@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
-import { filterForDisplay, sortForDisplay, catMap } from "@/lib/resources";
+import { filterForDisplay, sortForDisplay } from "@/lib/resources";
 import { getFaviconSources } from "@/lib/favicon";
+import { useResources } from "@/hooks/useResources";
+import { useCategories } from "@/hooks/useCategories";
+import { useCarousel } from "@/hooks/useCarousel";
 import type { Resource, Category } from "@/lib/types";
 
 /* ====== Shared hooks & utils ====== */
@@ -29,26 +32,20 @@ export function useScrollReveal() {
   return { ref, visible };
 }
 
+/**
+ * Composed home-page data hook.
+ * Delegates data-fetching to useResources / useCategories / useCarousel,
+ * keeps only display computation + URL sync at this level.
+ */
 export function useHomeData() {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { resources, loading: resLoading } = useResources();
+  const { categories, catMap, sidebarCats } = useCategories();
+  const loading = resLoading;
+
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(getInitialCategory);
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/resources").then((r) => r.json()),
-      fetch("/api/categories").then((r) => r.json()),
-    ]).then(([res, cats]) => {
-      setResources(res);
-      setCategories(cats);
-      setLoading(false);
-    });
-  }, []);
-
-  const cMap = catMap(categories);
-
+  // ── Display list (filter + sort + search) ──
   const display = useMemo(() => {
     let list = activeCategory
       ? resources.filter((r) => r.category === activeCategory)
@@ -65,19 +62,11 @@ export function useHomeData() {
 
   const isHome = !activeCategory && !search;
 
-  const featuredList = useMemo(() => display.filter((r) => r.featured), [display]);
-  const carouselSlides = featuredList.length > 0 ? featuredList : [display[0]].filter(Boolean);
-  const [slideIdx, setSlideIdx] = useState(0);
-  useEffect(() => {
-    if (!isHome || carouselSlides.length <= 1) return;
-    const t = setInterval(() => setSlideIdx((i) => (i + 1) % carouselSlides.length), 8000);
-    return () => clearInterval(t);
-  }, [isHome, carouselSlides.length]);
-  useEffect(() => { setSlideIdx(0); }, [carouselSlides.length]);
+  // ── Carousel (delegated) ──
+  const { current: featured, total: totalSlides, idx: slideIdx, setIdx: setSlideIdx, slides: carouselSlides } =
+    useCarousel(display, isHome);
 
-  const featured = carouselSlides[slideIdx] || display[0];
-  const totalSlides = carouselSlides.length;
-
+  // ── Derived lists ──
   const recent = useMemo(() => {
     return [...display].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
   }, [display]);
@@ -91,11 +80,11 @@ export function useHomeData() {
       grouped.set(r.category, list);
     }
     return Array.from(grouped.entries()).sort((a, b) => {
-      const catA = cMap.get(a[0]);
-      const catB = cMap.get(b[0]);
+      const catA = catMap.get(a[0]);
+      const catB = catMap.get(b[0]);
       return (catA?.sortWeight ?? 0) - (catB?.sortWeight ?? 0);
     });
-  }, [display, activeCategory, search, cMap]);
+  }, [display, activeCategory, search, catMap]);
 
   function selectCat(id: string | null) {
     setActiveCategory(id);
@@ -106,12 +95,11 @@ export function useHomeData() {
     window.history.replaceState(null, "", qs ? `/?${qs}` : "/");
   }
 
-  const sidebarCats = [...categories].filter((c) => !c.isCatchAll).sort((a, b) => (a.sortWeight ?? 0) - (b.sortWeight ?? 0));
-  const allCount = resources.filter((r) => { const cat = cMap.get(r.category); return !cat?.isCatchAll; }).length;
+  const allCount = resources.filter((r) => { const cat = catMap.get(r.category); return !cat?.isCatchAll; }).length;
 
   return {
     resources, categories, loading, search, setSearch,
-    activeCategory, selectCat, cMap, display, isHome,
+    activeCategory, selectCat, cMap: catMap, display, isHome,
     featured, totalSlides, slideIdx, setSlideIdx,
     recent, categorySections, sidebarCats, allCount,
     carouselSlides,
@@ -151,15 +139,34 @@ export function ScrollReveal({ children, delay = 0 }: { children: React.ReactNod
 export function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+
+  // Reset when link changes (carousel switches to a different resource)
+  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+
+  function advance() {
+    if (srcIdx + 1 >= sources.length) {
+      setLoaded(false); // all sources exhausted — keep emoji visible
+    } else {
+      setSrcIdx((i) => i + 1);
+    }
+  }
+
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 80, height: 80 }}>
-      <span style={{ position: "absolute", fontSize: 72, lineHeight: 1 }}>{fallback}</span>
-      {srcIdx < sources.length && (
+      {/* Emoji: visible while loading OR after all sources failed */}
+      {!loaded && (
+        <span style={{ position: "absolute", fontSize: 72, lineHeight: 1 }}>{fallback}</span>
+      )}
+      {!loaded && srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt=""
           style={{ position: "relative", zIndex: 1, width: 80, height: 80, objectFit: "contain", background: "transparent" }}
           loading="lazy"
-          onError={() => setSrcIdx((i) => i + 1)}
-          onLoad={(e) => { if (e.currentTarget.naturalWidth < 8) setSrcIdx((i) => i + 1); }} />
+          onError={advance}
+          onLoad={(e) => {
+            if (e.currentTarget.naturalWidth < 8) advance();
+            else setLoaded(true);
+          }} />
       )}
     </span>
   );
@@ -168,16 +175,35 @@ export function HeroFavicon({ link, fallback }: { link: string; fallback: string
 export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+
+  // Reset when link changes
+  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+
+  function advance() {
+    if (srcIdx + 1 >= sources.length) {
+      setLoaded(false); // all sources exhausted — keep emoji visible
+    } else {
+      setSrcIdx((i) => i + 1);
+    }
+  }
+
   return (
     <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
       style={{ background: "var(--color-paper-2)", overflow: "hidden", position: "relative" }}>
-      <span className="text-xl" style={{ position: "absolute" }}>{fallback}</span>
-      {srcIdx < sources.length && (
+      {/* Emoji: visible while loading OR after all sources failed */}
+      {!loaded && (
+        <span className="text-xl" style={{ position: "absolute" }}>{fallback}</span>
+      )}
+      {!loaded && srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt={alt}
           style={{ position: "relative", zIndex: 1, width: 28, height: 28, objectFit: "contain", background: "transparent" }}
           loading="lazy"
-          onError={() => setSrcIdx((i) => i + 1)}
-          onLoad={(e) => { if (e.currentTarget.naturalWidth < 8) setSrcIdx((i) => i + 1); }} />
+          onError={advance}
+          onLoad={(e) => {
+            if (e.currentTarget.naturalWidth < 8) advance();
+            else setLoaded(true);
+          }} />
       )}
     </div>
   );

@@ -87,8 +87,8 @@ export default function ResourceForm({ categories, resource }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !link.trim()) {
-      setError("名称和链接必填");
+    if (!name.trim()) {
+      setError("名称必填");
       return;
     }
     setSaving(true);
@@ -174,7 +174,7 @@ export default function ResourceForm({ categories, resource }: Props) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700 mb-1.5">链接 *</label>
+        <label className="block text-sm font-medium text-zinc-700 mb-1.5">链接</label>
         <input
           value={link}
           onChange={(e) => setLink(e.target.value)}

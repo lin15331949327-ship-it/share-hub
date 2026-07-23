@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { useDraggablePosition } from "@/hooks/useDraggablePosition";
 
 const SNAP = 60;
 const NAV_W = 420; // approximate expanded width for edge calculation
@@ -12,25 +13,28 @@ export default function Navbar() {
   const [hidden, setHidden] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [snapEdge, setSnapEdge] = useState<"left" | "right" | "top">("top");
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const navRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
-  const moved = useRef(false);
-  const offset = useRef({ x: 0, y: 0 });
+
+  const {
+    elementRef: navRef,
+    pos,
+    setPos,
+    moved,
+    persist,
+    onPointerDown,
+    onPointerMove,
+    finishDrag,
+  } = useDraggablePosition({ storageKey: "sh-nav-pos" });
 
   useEffect(() => { fetch("/api/auth").then((r) => r.json()).then((d) => setRole(d.role)); }, [pathname]);
 
-  /* Restore saved state on mount */
+  /* Restore collapsed + snapEdge from saved state on mount */
   useEffect(() => {
     try {
       const raw = localStorage.getItem("sh-nav-pos");
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (data.left !== undefined && data.top !== undefined) {
-        setPos({ left: data.left, top: data.top });
-      }
       if (data.collapsed) {
         setCollapsed(true);
         setSnapEdge(data.edge || "top");
@@ -44,75 +48,34 @@ export default function Navbar() {
 
   /* ── ALL hooks above this line ── */
 
-  function persist(left: number, top: number, col: boolean, edge: string) {
-    try {
-      localStorage.setItem("sh-nav-pos", JSON.stringify({ left, top, collapsed: col, edge }));
-    } catch { /* ignore */ }
-  }
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    const el = navRef.current;
-    if (!el) return;
-    dragging.current = true;
-    moved.current = false;
-    const rect = el.getBoundingClientRect();
-    offset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    el.style.cursor = "grabbing";
-    el.style.transition = "none";
-    // switch from centered if needed
-    if (el.style.transform) {
-      el.style.transform = "none";
-      el.style.left = rect.left + "px";
-      el.style.top = rect.top + "px";
-    }
-    el.setPointerCapture(e.pointerId);
-  }, []);
-
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current || !navRef.current) return;
-    const el = navRef.current;
-    const x = e.clientX - offset.current.x;
-    const y = e.clientY - offset.current.y;
-    if (Math.abs(x - parseInt(el.style.left || "0")) > 2 ||
-        Math.abs(y - parseInt(el.style.top || "0")) > 2) {
-      moved.current = true;
-    }
-    const w = collapsed ? 40 : el.offsetWidth;
-    const h = collapsed ? 40 : el.offsetHeight;
-    el.style.left = Math.max(0, Math.min(x, window.innerWidth - w)) + "px";
-    el.style.top = Math.max(0, Math.min(y, window.innerHeight - h)) + "px";
-  }, [collapsed]);
-
+  // Custom onPointerUp: add snap-to-edge + collapse logic
   const onPointerUp = useCallback(() => {
-    const el = navRef.current;
-    if (!el) return;
-    dragging.current = false;
-    el.style.cursor = "grab";
+    const finalPos = finishDrag();
+    if (!finalPos) return;
 
-    if (moved.current) {
-      const left = parseInt(el.style.left || "0");
-      const top = parseInt(el.style.top || "0");
+    let { left, top } = finalPos;
 
-      if (left < SNAP) {
-        setCollapsed(true); setSnapEdge("left");
-        setPos({ left: 4, top });
-        persist(4, top, true, "left");
-      } else if (left > window.innerWidth - 60 - SNAP) {
-        setCollapsed(true); setSnapEdge("right");
-        setPos({ left: window.innerWidth - 40, top });
-        persist(window.innerWidth - 40, top, true, "right");
-      } else if (top < SNAP) {
-        setCollapsed(true); setSnapEdge("top");
-        setPos({ left, top: 4 });
-        persist(left, 4, true, "top");
-      } else {
-        setCollapsed(false);
-        setPos({ left, top });
-        persist(left, top, false, "top");
-      }
-      el.style.transition = "all 400ms var(--ease-spring)";
+    if (left < SNAP) {
+      setCollapsed(true);
+      setSnapEdge("left");
+      setPos({ left: 4, top });
+      persist({ left: 4, top }, { collapsed: true, edge: "left" });
+    } else if (left > window.innerWidth - 60 - SNAP) {
+      setCollapsed(true);
+      setSnapEdge("right");
+      setPos({ left: window.innerWidth - 40, top });
+      persist({ left: window.innerWidth - 40, top }, { collapsed: true, edge: "right" });
+    } else if (top < SNAP) {
+      setCollapsed(true);
+      setSnapEdge("top");
+      setPos({ left, top: 4 });
+      persist({ left, top: 4 }, { collapsed: true, edge: "top" });
+    } else {
+      setCollapsed(false);
+      setPos({ left, top });
+      persist({ left, top }, { collapsed: false, edge: "top" });
     }
-  }, []);
+  }, [finishDrag, setPos, persist]);
 
   if (hidden) return null;
 
@@ -137,7 +100,7 @@ export default function Navbar() {
           nt = Math.max(4, Math.min(nt, window.innerHeight - 48));
           setPos({ left: nl, top: nt });
           setCollapsed(false);
-          persist(nl, nt, false, "top");
+          persist({ left: nl, top: nt }, { collapsed: false, edge: "top" });
         }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -193,9 +156,7 @@ export default function Navbar() {
           transition: "box-shadow 300ms var(--ease-spring)",
         }}
         onMouseEnter={(e) => {
-          if (!dragging.current) {
-            e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08)";
-          }
+          e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)";

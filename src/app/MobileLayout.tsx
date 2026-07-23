@@ -522,14 +522,17 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
 function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+  function advance() { if (srcIdx + 1 >= sources.length) setLoaded(false); else setSrcIdx((i) => i + 1); }
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20 }}>
-      <span style={{ position: "absolute", fontSize: 16, lineHeight: 1 }}>{fallback}</span>
-      {srcIdx < sources.length && (
+      {!loaded && <span style={{ position: "absolute", fontSize: 16, lineHeight: 1 }}>{fallback}</span>}
+      {!loaded && srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt={alt}
           style={{ position: "relative", zIndex: 1, width: 20, height: 20, objectFit: "contain", background: "transparent" }}
-          onError={() => setSrcIdx((i) => i + 1)}
-          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) setSrcIdx((i) => i + 1); }} />
+          onError={advance}
+          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) advance(); else setLoaded(true); }} />
       )}
     </span>
   );
@@ -538,14 +541,17 @@ function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallb
 function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
+  function advance() { if (srcIdx + 1 >= sources.length) setLoaded(false); else setSrcIdx((i) => i + 1); }
   return (
     <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40 }}>
-      <span style={{ position: "absolute", fontSize: 32, lineHeight: 1 }}>{fallback}</span>
-      {srcIdx < sources.length && (
+      {!loaded && <span style={{ position: "absolute", fontSize: 32, lineHeight: 1 }}>{fallback}</span>}
+      {!loaded && srcIdx < sources.length && (
         <img src={sources[srcIdx]} alt=""
           style={{ position: "relative", zIndex: 1, width: 40, height: 40, objectFit: "contain", background: "transparent" }}
-          onError={() => setSrcIdx((i) => i + 1)}
-          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) setSrcIdx((i) => i + 1); }} />
+          onError={advance}
+          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) advance(); else setLoaded(true); }} />
       )}
     </span>
   );
