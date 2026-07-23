@@ -24,6 +24,7 @@ export default function ResourceForm({ categories, resource }: Props) {
   const [tags, setTags] = useState(resource?.tags?.join(", ") || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploadMsg, setUploadMsg] = useState(""); // inline feedback for uploads
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const packageInputRef = useRef<HTMLInputElement>(null);
@@ -67,14 +68,24 @@ export default function ResourceForm({ categories, resource }: Props) {
   }, [categories, category]);
 
   async function handleUpload(file: File, type: "image" | "video" | "file") {
+    setUploadMsg("");
     const url = await upload(file, type);
-    if (!url) return;
+    if (!url) {
+      setUploadMsg("上传失败，请检查网络或 VPN");
+      return;
+    }
+    if (!editor) {
+      setUploadMsg("编辑器未就绪，请稍后再试");
+      return;
+    }
     const html = buildInsertHtml(url, file, type);
     if (type === "image") {
-      editor?.chain().focus().setImage({ src: url }).run();
+      editor.chain().focus().setImage({ src: url }).run();
     } else {
-      editor?.chain().focus().insertContent(html).run();
+      editor.chain().focus().insertContent(html).run();
     }
+    setUploadMsg(`✅ ${file.name} 上传成功`);
+    setTimeout(() => setUploadMsg(""), 3000);
   }
 
   function handleInsertVideo() {
@@ -127,6 +138,10 @@ export default function ResourceForm({ categories, resource }: Props) {
     <form onSubmit={submit} className="max-w-2xl space-y-5">
       {error && (
         <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>
+      )}
+
+      {uploadMsg && (
+        <div className={`p-3 rounded-lg text-sm ${uploadMsg.startsWith("✅") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>{uploadMsg}</div>
       )}
 
       {uploading && progress.total > 0 && (
