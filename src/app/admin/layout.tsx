@@ -1,12 +1,10 @@
 import Link from "next/link";
 import StorageBar from "@/components/StorageBar";
 import PasswordForm from "@/components/PasswordForm";
-import VercelNotice from "@/components/VercelNotice";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
-      <VercelNotice />
       <StorageBar />
       <div className="flex items-center justify-between mb-4 border-b border-zinc-200 pb-3">
         <div className="flex gap-6">

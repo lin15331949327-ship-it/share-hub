@@ -5,6 +5,7 @@ import { seed } from "@/lib/seed";
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
 import PwaRegister from "@/components/PwaRegister";
+import VercelNotice from "@/components/VercelNotice";
 import { DeviceProvider } from "./DeviceProvider";
 import "./globals.css";
 
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </AuthGuard>
         </DeviceProvider>
         <PwaRegister />
+        <VercelNotice />
         <SeedRunner />
       </body>
     </html>
