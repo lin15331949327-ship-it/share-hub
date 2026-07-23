@@ -3,7 +3,8 @@
  * Run on server: npx tsx scripts/migrate-kv-to-sqlite.ts
  */
 
-// Use Vercel KV SDK directly
+// Use Vercel KV SDK directly — ran via tsx, not part of Next.js build
+// @ts-nocheck
 const { kv } = await import("@vercel/kv");
 import Database from "better-sqlite3";
 import path from "path";
