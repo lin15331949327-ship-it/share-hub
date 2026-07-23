@@ -32,12 +32,15 @@ export async function getSession(): Promise<SessionUser | null> {
   return verifyToken(token);
 }
 
-export async function setSessionCookie(user: SessionUser): Promise<void> {
+export async function setSessionCookie(
+  user: SessionUser,
+  isSecure: boolean = false
+): Promise<void> {
   const token = await signToken(user);
   const jar = await cookies();
   jar.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 30, // 30 days
     path: "/",

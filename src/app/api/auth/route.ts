@@ -9,7 +9,8 @@ export async function POST(req: NextRequest) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
-  await setSessionCookie(result.user);
+  const isSecure = req.headers.get("x-forwarded-proto") === "https";
+  await setSessionCookie(result.user, isSecure);
   return NextResponse.json({ role: result.user.role });
 }
 
