@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { seed } from "@/lib/seed";
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
+import PwaRegister from "@/components/PwaRegister";
 import { DeviceProvider } from "./DeviceProvider";
 import "./globals.css";
 
@@ -22,6 +23,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ShareHub",
   description: "极简资源共享站",
+  manifest: "/manifest.json",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -38,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="max-w-6xl mx-auto px-6 pb-24 pt-4">{children}</main>
           </AuthGuard>
         </DeviceProvider>
+        <PwaRegister />
         <SeedRunner />
       </body>
     </html>
