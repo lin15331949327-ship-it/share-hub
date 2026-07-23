@@ -58,16 +58,16 @@ function rowToResource(r: any): Resource {
 
 // ── Resources ──
 
-export function getAllResources(): Resource[] {
+export async function getAllResources(): Promise<Resource[]> {
   return db().prepare("SELECT * FROM resources").all().map(rowToResource);
 }
 
-export function getResource(id: string): Resource | null {
+export async function getResource(id: string): Promise<Resource | null> {
   const r = db().prepare("SELECT * FROM resources WHERE id = ?").get(id) as any;
   return r ? rowToResource(r) : null;
 }
 
-export function createResource(r: Resource): void {
+export async function createResource(r: Resource): Promise<void> {
   db().prepare(`INSERT INTO resources (id,name,subtitle,description,link,category,tags,createdBy,createdAt,displayOrder,featured,deletedAt)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(
     r.id, r.name, r.subtitle || "", r.description || "", r.link || "",
@@ -76,7 +76,7 @@ export function createResource(r: Resource): void {
   );
 }
 
-export function updateResource(r: Resource): void {
+export async function updateResource(r: Resource): Promise<void> {
   db().prepare(`UPDATE resources SET name=?,subtitle=?,description=?,link=?,category=?,tags=?,createdBy=?,createdAt=?,displayOrder=?,featured=?,deletedAt=? WHERE id=?`).run(
     r.name, r.subtitle || "", r.description || "", r.link || "",
     r.category, JSON.stringify(r.tags || []), r.createdBy, r.createdAt,
@@ -84,17 +84,17 @@ export function updateResource(r: Resource): void {
   );
 }
 
-export function deleteResource(id: string): void {
+export async function deleteResource(id: string): Promise<void> {
   db().prepare("DELETE FROM resources WHERE id = ?").run(id);
 }
 
 // ── Categories ──
 
-export function getAllCategories(): Category[] {
+export async function getAllCategories(): Promise<Category[]> {
   return db().prepare("SELECT * FROM categories ORDER BY sortWeight").all() as Category[];
 }
 
-export function setCategories(cats: Category[]): void {
+export async function setCategories(cats: Category[]): Promise<void> {
   const d = db();
   d.exec("DELETE FROM categories");
   const insert = d.prepare("INSERT INTO categories (id,name,icon,\"order\",isCatchAll,sortWeight) VALUES (?,?,?,?,?,?)");
@@ -106,20 +106,20 @@ export function setCategories(cats: Category[]): void {
 
 // ── Passwords ──
 
-export function getAdminPassword(): string | null {
+export async function getAdminPassword(): Promise<string | null> {
   const r = db().prepare("SELECT hash FROM passwords WHERE role = 'admin'").get() as any;
   return r?.hash || null;
 }
 
-export function setAdminPassword(hash: string): void {
+export async function setAdminPassword(hash: string): Promise<void> {
   db().prepare("INSERT OR REPLACE INTO passwords (role, hash) VALUES ('admin', ?)").run(hash);
 }
 
-export function getEditorPassword(): string | null {
+export async function getEditorPassword(): Promise<string | null> {
   const r = db().prepare("SELECT hash FROM passwords WHERE role = 'editor'").get() as any;
   return r?.hash || null;
 }
 
-export function setEditorPassword(hash: string): void {
+export async function setEditorPassword(hash: string): Promise<void> {
   db().prepare("INSERT OR REPLACE INTO passwords (role, hash) VALUES ('editor', ?)").run(hash);
 }
