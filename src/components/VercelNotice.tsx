@@ -60,7 +60,7 @@ export default function VercelNotice() {
             <div className="flex-1 min-w-0">
               <p className="text-xs text-blue-500 font-semibold uppercase tracking-wide">新地址</p>
               <a
-                href="https://share.aseeker.bio"
+                href="https://share.aseeker.bio/"
                 className="text-sm font-bold text-blue-700 hover:underline truncate block"
               >
                 share.aseeker.bio
@@ -71,7 +71,7 @@ export default function VercelNotice() {
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <a
-              href="https://share.aseeker.bio"
+              href="https://share.aseeker.bio/"
               className="flex-1 text-center px-5 py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
               style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", boxShadow: "0 4px 16px rgba(102,126,234,0.35)" }}
             >
