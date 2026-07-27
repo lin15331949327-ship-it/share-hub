@@ -9,13 +9,22 @@ import { NextRequest, NextResponse } from "next/server";
  * Cached at the edge (24h) + browser (7d).
  */
 
-const SOURCES = (domain: string) => [
-  { url: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`, label: "google" },
-  { url: `https://icons.duckduckgo.com/ip3/${domain}.ico`, label: "ddg" },
-  { url: `https://${domain}/favicon.ico`, label: "direct" },
-  // Fallback: proxy through Vercel (outside GFW) if running on Alibaba ECS
-  { url: `https://share.linxiaoxiao111.dpdns.org/api/favicon?domain=${domain}`, label: "vercel" },
-];
+const SOURCES = (domain: string) => {
+  // ECS is inside GFW — Vercel proxy first (it can reach Google/DDG), then try direct
+  const isECS = !process.env.VERCEL;
+  if (isECS) {
+    return [
+      { url: `https://share.linxiaoxiao111.dpdns.org/api/favicon?domain=${domain}`, label: "vercel" },
+      { url: `https://${domain}/favicon.ico`, label: "direct" },
+    ];
+  }
+  // Vercel deployment — can reach Google/DDG directly
+  return [
+    { url: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`, label: "google" },
+    { url: `https://icons.duckduckgo.com/ip3/${domain}.ico`, label: "ddg" },
+    { url: `https://${domain}/favicon.ico`, label: "direct" },
+  ];
+};
 
 export async function GET(req: NextRequest) {
   const domain = req.nextUrl.searchParams.get("domain");

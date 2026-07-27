@@ -9,9 +9,11 @@ export function getFaviconSources(link: string): string[] {
   try {
     const url = new URL(link);
     const domain = url.hostname;
+    // Always use HTTPS to avoid mixed-content warnings on secure pages
+    const secureOrigin = url.origin.replace(/^http:/, "https:");
     return [
       `/api/favicon?domain=${domain}`,                                       // server proxy — outside GFW
-      `${url.origin}/favicon.ico`,                                           // direct fallback
+      `${secureOrigin}/favicon.ico`,                                         // direct fallback (forced HTTPS)
       `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,         // Google (client-side fallback)
       `https://icons.duckduckgo.com/ip3/${domain}.ico`,                    // DDG (client-side fallback)
     ];
