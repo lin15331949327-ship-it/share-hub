@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
 import PwaRegister from "@/components/PwaRegister";
 import VercelNotice from "@/components/VercelNotice";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { DeviceProvider } from "./DeviceProvider";
 import "./globals.css";
 
@@ -38,7 +39,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <DeviceProvider device={device}>
           <AuthGuard>
             <Navbar />
-            <main className="max-w-6xl mx-auto px-6 pb-24 pt-4">{children}</main>
+            <main className="max-w-6xl mx-auto px-6 pb-24 pt-4">
+              <AnnouncementBar />
+              {children}
+            </main>
           </AuthGuard>
         </DeviceProvider>
         <PwaRegister />

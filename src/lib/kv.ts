@@ -6,4 +6,5 @@ export const {
   getAllResources, getResource, createResource, updateResource, deleteResource,
   getAllCategories, setCategories,
   getAdminPassword, setAdminPassword, getEditorPassword, setEditorPassword,
+  getAnnouncement, setAnnouncement,
 } = backend;

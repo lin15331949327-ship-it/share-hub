@@ -57,3 +57,15 @@ export async function getEditorPassword(): Promise<string | null> {
 export async function setEditorPassword(hash: string): Promise<void> {
   await kv.set("password:editor", hash);
 }
+
+// ─── Announcement ───
+
+export async function getAnnouncement(): Promise<Announcement | null> {
+  return kv.get<Announcement>("announcement");
+}
+
+export async function setAnnouncement(a: Announcement): Promise<void> {
+  await kv.set("announcement", a);
+}
+
+import type { Announcement } from "./types";

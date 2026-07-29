@@ -44,6 +44,10 @@ function initSchema(d: Database.Database) {
       role TEXT PRIMARY KEY,
       hash TEXT NOT NULL DEFAULT ''
     );
+    CREATE TABLE IF NOT EXISTS meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT ''
+    );
   `);
 }
 
@@ -123,3 +127,17 @@ export async function getEditorPassword(): Promise<string | null> {
 export async function setEditorPassword(hash: string): Promise<void> {
   db().prepare("INSERT OR REPLACE INTO passwords (role, hash) VALUES ('editor', ?)").run(hash);
 }
+
+// ── Announcement (meta table) ──
+
+export async function getAnnouncement(): Promise<Announcement | null> {
+  const r = db().prepare("SELECT value FROM meta WHERE key = 'announcement'").get() as any;
+  if (!r) return null;
+  try { return JSON.parse(r.value) as Announcement; } catch { return null; }
+}
+
+export async function setAnnouncement(a: Announcement): Promise<void> {
+  db().prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('announcement', ?)").run(JSON.stringify(a));
+}
+
+import type { Announcement } from "./types";

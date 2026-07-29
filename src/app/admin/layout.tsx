@@ -20,6 +20,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             分类管理
           </Link>
+          <Link
+            href="/admin/announcement"
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            公告
+          </Link>
           <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors">
             ← 回首页
           </Link>

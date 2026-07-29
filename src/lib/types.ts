@@ -31,3 +31,10 @@ export interface Category {
 export interface SessionUser {
   role: "admin" | "editor";
 }
+
+export interface Announcement {
+  text: string;
+  link?: string;
+  color?: "blue" | "yellow" | "green";
+  updatedAt: number;
+}
