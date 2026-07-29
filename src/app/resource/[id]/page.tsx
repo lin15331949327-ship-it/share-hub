@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getResource, getAllCategories } from "@/lib/kv";
+import { BackButton } from "./BackButton";
 
 async function getData(id: string) {
   const [resource, categories] = await Promise.all([getResource(id), getAllCategories()]);
@@ -23,12 +23,10 @@ export default async function ResourcePage({
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link
-        href={resource.category ? `/?cat=${resource.category}` : "/"}
-        className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors mb-6 inline-block"
-      >
-        ← {category ? `返回${category.name}` : "返回首页"}
-      </Link>
+      <BackButton
+        fallbackHref={resource.category ? `/?cat=${resource.category}` : "/"}
+        label={category ? `返回${category.name}` : "返回首页"}
+      />
 
       <article className="bg-white rounded-2xl border border-zinc-200 p-6 sm:p-8 shadow-sm">
         <div className="flex items-start justify-between mb-4">
