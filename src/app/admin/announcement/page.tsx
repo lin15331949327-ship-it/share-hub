@@ -185,6 +185,16 @@ export default function AnnouncementEditor() {
               清除公告
             </button>
           )}
+          <button
+            onClick={() => {
+              localStorage.removeItem("sh-announcement-dismissed");
+              setMsg({ type: "ok", text: "已重置 — 刷新页面即可看到公告" });
+            }}
+            className="px-5 py-2.5 rounded-full text-sm transition-all"
+            style={{ color: "var(--color-text-muted)", background: "none", border: "1px solid var(--color-border)" }}
+          >
+            重置关闭
+          </button>
         </div>
 
         {msg && (
