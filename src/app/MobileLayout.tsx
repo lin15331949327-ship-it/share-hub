@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { stripHtml } from "./HomeShared";
-import { getFaviconSources } from "@/lib/favicon";
+import { stripHtml, FaviconImage } from "./HomeShared";
 import type { Resource, Category } from "@/lib/types";
 
 interface Props {
@@ -312,7 +311,7 @@ function FeaturedCard({ resource, category }: { resource: Resource; category?: C
                 style={{ background: T.accent }} />
               <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden"
                 style={{ background: "rgba(59,130,246,0.15)", border: `1px solid rgba(255,255,255,0.12)`, boxShadow: `0 0 20px ${T.accentGlow}` }}>
-                <FaviconLarge link={resource.link} fallback={category?.icon || "📦"} />
+                <FaviconImage link={resource.link} fallback={category?.icon || "📦"} size={40} />
               </div>
             </div>
 
@@ -364,7 +363,7 @@ function RecentScroll({ items, cMap }: { items: Resource[]; cMap: Map<string, Ca
               }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden mb-3 shrink-0"
                 style={{ background: T.raised }}>
-                <FaviconIcon link={r.link} alt={r.name} fallback={cMap.get(r.category)?.icon || "📦"} />
+                <FaviconImage link={r.link} alt={r.name} fallback={cMap.get(r.category)?.icon || "📦"} size={20} />
               </div>
               <h4 className="text-sm font-semibold truncate mb-1 shrink-0" style={{ fontFamily: "var(--font-display)" }}>{r.name}</h4>
               <p className="text-[12px] line-clamp-2 leading-relaxed flex-1" style={{ color: T.muted }}>
@@ -402,7 +401,7 @@ function CollectionStrip({ category, items, selectCat }: { category: Category; i
               }}>
               <div className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden mb-2 shrink-0"
                 style={{ background: T.raised }}>
-                <FaviconIcon link={r.link} alt={r.name} fallback={category.icon || "📦"} />
+                <FaviconImage link={r.link} alt={r.name} fallback={category.icon || "📦"} size={20} />
               </div>
               <h4 className="text-[12px] font-semibold line-clamp-2 leading-tight flex-1 flex items-center px-0.5" style={{ fontFamily: "var(--font-display)", wordBreak: "break-word" }}>{r.name}</h4>
             </div>
@@ -424,7 +423,7 @@ function SearchResult({ resource, category, index }: { resource: Resource; categ
         <div className="flex items-center gap-3">
           <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
             style={{ background: T.raised }}>
-            <FaviconIcon link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} />
+            <FaviconImage link={resource.link} alt={resource.name} fallback={category?.icon || "📦"} size={20} />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold truncate">{resource.name}</h4>
@@ -518,45 +517,4 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
   );
 }
 
-/* ═══ FAVICON ═══ */
-function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
-  const sources = getFaviconSources(link);
-  const [srcIdx, setSrcIdx] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
-  useEffect(() => { const img = imgRef.current; if (img?.complete && img.naturalWidth >= 6) setLoaded(true); });
-  function advance() { if (srcIdx + 1 >= sources.length) setLoaded(false); else setSrcIdx((i) => i + 1); }
-  return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20 }}>
-      {!loaded && <span style={{ position: "absolute", fontSize: 16, lineHeight: 1 }}>{fallback}</span>}
-      {srcIdx < sources.length && (
-        <img ref={imgRef} src={sources[srcIdx]} alt={alt}
-          style={{ position: "relative", zIndex: 1, width: 20, height: 20, objectFit: "contain", background: "transparent" }}
-          onError={advance}
-          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) advance(); else setLoaded(true); }} />
-      )}
-    </span>
-  );
-}
-
-function FaviconLarge({ link, fallback }: { link: string; fallback: string }) {
-  const sources = getFaviconSources(link);
-  const [srcIdx, setSrcIdx] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
-  useEffect(() => { const img = imgRef.current; if (img?.complete && img.naturalWidth >= 6) setLoaded(true); });
-  function advance() { if (srcIdx + 1 >= sources.length) setLoaded(false); else setSrcIdx((i) => i + 1); }
-  return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40 }}>
-      {!loaded && <span style={{ position: "absolute", fontSize: 32, lineHeight: 1 }}>{fallback}</span>}
-      {srcIdx < sources.length && (
-        <img ref={imgRef} src={sources[srcIdx]} alt=""
-          style={{ position: "relative", zIndex: 1, width: 40, height: 40, objectFit: "contain", background: "transparent" }}
-          onError={advance}
-          onLoad={(e) => { if (e.currentTarget.naturalWidth < 6) advance(); else setLoaded(true); }} />
-      )}
-    </span>
-  );
-}
+/* Favicon rendering uses FaviconImage from HomeShared */

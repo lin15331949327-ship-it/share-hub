@@ -137,15 +137,34 @@ export function ScrollReveal({ children, delay = 0 }: { children: React.ReactNod
 }
 
 export function HeroFavicon({ link, fallback }: { link: string; fallback: string }) {
+  return <FaviconImage link={link} fallback={fallback} size={80} />;
+}
+
+export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
+  return <FaviconImage link={link} alt={alt} fallback={fallback} size={28} containerSize={44} rounded />;
+}
+
+/**
+ * Unified favicon image — the single source of truth for all favicon rendering.
+ * Replaces 4 duplicate implementations across HomeShared and MobileLayout.
+ */
+export function FaviconImage({
+  link, alt = "", fallback, size,
+  containerSize,
+  rounded = false,
+}: {
+  link: string; alt?: string; fallback: string; size: number;
+  containerSize?: number;
+  rounded?: boolean;
+}) {
   const sources = getFaviconSources(link);
   const [srcIdx, setSrcIdx] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const sz = containerSize ?? size;
 
-  // Reset when link changes (carousel switches to a different resource)
   useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
 
-  // Handle hydration case: img may have loaded before React attached onLoad
   useEffect(() => {
     const img = imgRef.current;
     if (img?.complete && img.naturalWidth >= 8) setLoaded(true);
@@ -153,20 +172,20 @@ export function HeroFavicon({ link, fallback }: { link: string; fallback: string
 
   function advance() {
     if (srcIdx + 1 >= sources.length) {
-      setLoaded(false); // all sources exhausted — keep emoji visible
+      setLoaded(false);
     } else {
       setSrcIdx((i) => i + 1);
     }
   }
 
-  return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 80, height: 80 }}>
+  const imgEl = (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: sz, height: sz }}>
       {!loaded && (
-        <span style={{ position: "absolute", fontSize: 72, lineHeight: 1 }}>{fallback}</span>
+        <span style={{ position: "absolute", fontSize: Math.round(size * 0.7), lineHeight: 1 }}>{fallback}</span>
       )}
       {srcIdx < sources.length && (
-        <img ref={imgRef} src={sources[srcIdx]} alt=""
-          style={{ position: "relative", zIndex: 1, width: 80, height: 80, objectFit: "contain", background: "transparent" }}
+        <img ref={imgRef} src={sources[srcIdx]} alt={alt}
+          style={{ position: "relative", zIndex: 1, width: size, height: size, objectFit: "contain", background: "transparent" }}
           loading="lazy"
           onError={advance}
           onLoad={(e) => {
@@ -176,49 +195,17 @@ export function HeroFavicon({ link, fallback }: { link: string; fallback: string
       )}
     </span>
   );
-}
 
-export function FaviconIcon({ link, alt, fallback }: { link: string; alt: string; fallback: string }) {
-  const sources = getFaviconSources(link);
-  const [srcIdx, setSrcIdx] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // Reset when link changes
-  useEffect(() => { setSrcIdx(0); setLoaded(false); }, [link]);
-
-  // Handle hydration case: img may have loaded before React attached onLoad
-  useEffect(() => {
-    const img = imgRef.current;
-    if (img?.complete && img.naturalWidth >= 8) setLoaded(true);
-  });
-
-  function advance() {
-    if (srcIdx + 1 >= sources.length) {
-      setLoaded(false); // all sources exhausted — keep emoji visible
-    } else {
-      setSrcIdx((i) => i + 1);
-    }
+  if (rounded) {
+    return (
+      <div className="shrink-0 rounded-[var(--radius-md)] flex items-center justify-center select-none"
+        style={{ width: sz, height: sz, background: "var(--color-paper-2)", overflow: "hidden", position: "relative" }}>
+        {imgEl}
+      </div>
+    );
   }
 
-  return (
-    <div className="shrink-0 w-11 h-11 rounded-[var(--radius-md)] flex items-center justify-center select-none"
-      style={{ background: "var(--color-paper-2)", overflow: "hidden", position: "relative" }}>
-      {!loaded && (
-        <span className="text-xl" style={{ position: "absolute" }}>{fallback}</span>
-      )}
-      {srcIdx < sources.length && (
-        <img ref={imgRef} src={sources[srcIdx]} alt={alt}
-          style={{ position: "relative", zIndex: 1, width: 28, height: 28, objectFit: "contain", background: "transparent" }}
-          loading="lazy"
-          onError={advance}
-          onLoad={(e) => {
-            if (e.currentTarget.naturalWidth < 8) advance();
-            else setLoaded(true);
-          }} />
-      )}
-    </div>
-  );
+  return imgEl;
 }
 
 export function stripHtml(html: string): string {
