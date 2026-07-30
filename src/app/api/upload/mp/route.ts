@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 import { writeFile, appendFile, mkdir, readdir, readFile, unlink } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
@@ -13,16 +13,16 @@ const TMP_DIR = path.join(UPLOAD_DIR, ".tmp");
 // ── POST /api/upload/mp?action=complete ──
 
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Login required" }, { status: 401 });
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
 
   const action = req.nextUrl.searchParams.get("action");
   if (!action) return NextResponse.json({ error: "Missing action" }, { status: 400 });
 
   switch (action) {
-    case "start": return handleStart(req, session.role);
+    case "start": return handleStart(req, auth.role);
     case "part": return handlePart(req);
-    case "complete": return handleComplete(req, session.role);
+    case "complete": return handleComplete(req, auth.role);
     default: return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   }
 }
