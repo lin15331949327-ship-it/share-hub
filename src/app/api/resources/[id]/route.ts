@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResource, updateResource, deleteResource } from "@/lib/kv";
-import { getSession } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 
 // PUT /api/resources/:id
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Login required" }, { status: 401 });
-  }
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
 
   const { id } = await params;
   const existing = await getResource(id);
@@ -40,10 +38,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Login required" }, { status: 401 });
-  }
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
 
   const { id } = await params;
   const existing = await getResource(id);

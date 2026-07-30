@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllResources, getResource, createResource, updateResource, deleteResource } from "@/lib/kv";
-import { getSession } from "@/lib/auth";
+import { getAllResources, createResource } from "@/lib/kv";
+import { requireAuth } from "@/lib/api-guards";
 import type { Resource } from "@/lib/types";
 
 // GET /api/resources
@@ -26,10 +26,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/resources
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Login required" }, { status: 401 });
-  }
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
 
   const body = await req.json();
   const resource: Resource = {
@@ -40,7 +38,7 @@ export async function POST(req: NextRequest) {
     link: body.link,
     category: body.category,
     tags: body.tags || [],
-    createdBy: session.role,
+    createdBy: auth.role,
     createdAt: Date.now(),
     displayOrder: Date.now(),
   };

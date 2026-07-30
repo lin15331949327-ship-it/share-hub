@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllCategories, setCategories } from "@/lib/kv";
-import { getSession } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 import type { Category } from "@/lib/types";
-
-function adminGuard(session: Awaited<ReturnType<typeof getSession>>) {
-  if (!session || session.role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
-  return null;
-}
 
 // GET /api/categories
 export async function GET() {
@@ -19,9 +12,8 @@ export async function GET() {
 
 // POST /api/categories
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  const err = adminGuard(session);
-  if (err) return err;
+  const auth = await requireAuth("admin");
+  if (auth instanceof NextResponse) return auth;
 
   const body = await req.json();
   const cats = await getAllCategories();
@@ -38,9 +30,8 @@ export async function POST(req: NextRequest) {
 
 // PUT /api/categories
 export async function PUT(req: NextRequest) {
-  const session = await getSession();
-  const err = adminGuard(session);
-  if (err) return err;
+  const auth = await requireAuth("admin");
+  if (auth instanceof NextResponse) return auth;
 
   const body = await req.json();
   const { id, name, icon, order, isCatchAll, sortWeight } = body;
@@ -61,9 +52,8 @@ export async function PUT(req: NextRequest) {
 
 // DELETE /api/categories
 export async function DELETE(req: NextRequest) {
-  const session = await getSession();
-  const err = adminGuard(session);
-  if (err) return err;
+  const auth = await requireAuth("admin");
+  if (auth instanceof NextResponse) return auth;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {

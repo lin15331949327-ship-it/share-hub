@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { requireAuth } from "@/lib/api-guards";
 import { getAnnouncement, setAnnouncement } from "@/lib/kv";
 import type { Announcement } from "@/lib/types";
 
@@ -11,10 +11,8 @@ export async function GET() {
 
 // PUT /api/announcement — admin write
 export async function PUT(req: NextRequest) {
-  const session = await getSession();
-  if (!session || session.role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
+  const auth = await requireAuth("admin");
+  if (auth instanceof NextResponse) return auth;
 
   const body = await req.json();
   const text = (body.text || "").trim();
