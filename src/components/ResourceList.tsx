@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Resource, Category } from "@/lib/types";
 
+/**
+ * 回收站入口开关 — 临时隐藏回收站入口（2026-08-01 用户要求）。
+ * 删除仍是软删除，数据保留在回收站，恢复时把此项改回 true 即可。
+ */
+const TRASH_VISIBLE = false;
+
 export default function ResourceList() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -33,7 +39,7 @@ export default function ResourceList() {
   useEffect(() => { refresh(); }, [showTrash]);
 
   async function del(id: string, name: string) {
-    if (!confirm(`删除「${name}」？可在回收站恢复。`)) return;
+    if (!confirm(`删除「${name}」？`)) return;
     await fetch(`/api/resources/${id}`, { method: "DELETE" });
     setResources((prev) => prev.filter((r) => r.id !== id));
     router.refresh();
@@ -125,7 +131,7 @@ export default function ResourceList() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          {role === "admin" && (
+          {role === "admin" && TRASH_VISIBLE && (
             <button
               onClick={() => setShowTrash(!showTrash)}
               className="text-sm text-zinc-500 hover:text-zinc-700 transition-colors"

@@ -2,6 +2,13 @@ import { getAllCategories, setCategories, getAdminPassword, getEditorPassword, s
 import { hash } from "./hash";
 import type { Category } from "./types";
 
+/**
+ * 回收站自动清理开关 — PAUSED 2026-08-01。
+ * 回收站入口隐藏期间不自动清理，保证用户随时能恢复删除的内容。
+ * 重新开放回收站时把此项改回 true。
+ */
+const AUTO_PURGE_ENABLED = false;
+
 const DEFAULT_CATEGORIES: Category[] = [
   { id: "software", name: "软件工具", icon: "💿", order: 0 },
   { id: "websites", name: "网站收藏", icon: "🔗", order: 1 },
@@ -44,16 +51,8 @@ export async function seed() {
     }
 
     // Auto-purge: hard-delete resources in trash > 30 days
-    const { getAllResources, deleteResource } = await import("./kv");
-    const { deleteR2Files } = await import("./r2");
-    const all = await getAllResources();
-    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    for (const r of all) {
-      if (r.deletedAt && r.deletedAt < cutoff) {
-        await deleteR2Files(r.description);
-        await deleteResource(r.id);
-        console.log(`[seed] Auto-purged: ${r.name}`);
-      }
+    if (AUTO_PURGE_ENABLED) {
+      await autoPurgeTrash();
     }
   }
 
@@ -69,5 +68,20 @@ export async function seed() {
   if (!editorPw && process.env.EDITOR_PASSWORD) {
     await setEditorPassword(await hash(process.env.EDITOR_PASSWORD));
     console.log("[seed] Seeded editor password");
+  }
+}
+
+/** Hard-delete resources sitting in trash longer than 30 days. */
+async function autoPurgeTrash() {
+  const { getAllResources, deleteResource } = await import("./kv");
+  const { deleteR2Files } = await import("./r2");
+  const all = await getAllResources();
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  for (const r of all) {
+    if (r.deletedAt && r.deletedAt < cutoff) {
+      await deleteR2Files(r.description);
+      await deleteResource(r.id);
+      console.log(`[seed] Auto-purged: ${r.name}`);
+    }
   }
 }
