@@ -3,11 +3,10 @@ import { hash } from "./hash";
 import type { Category } from "./types";
 
 /**
- * 回收站自动清理开关 — PAUSED 2026-08-01。
- * 回收站入口隐藏期间不自动清理，保证用户随时能恢复删除的内容。
- * 重新开放回收站时把此项改回 true。
+ * 回收站自动清理开关 — 重新启用（2026-08-02 用户要求）。
+ * 回收站超过 30 天的内容自动硬删除。
  */
-const AUTO_PURGE_ENABLED = false;
+const AUTO_PURGE_ENABLED = true;
 
 const DEFAULT_CATEGORIES: Category[] = [
   { id: "software", name: "软件工具", icon: "💿", order: 0 },

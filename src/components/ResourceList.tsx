@@ -6,10 +6,9 @@ import { useRouter } from "next/navigation";
 import type { Resource, Category } from "@/lib/types";
 
 /**
- * 回收站入口开关 — 临时隐藏回收站入口（2026-08-01 用户要求）。
- * 删除仍是软删除，数据保留在回收站，恢复时把此项改回 true 即可。
+ * 回收站入口开关 — 重新开放（2026-08-02 用户要求）。
  */
-const TRASH_VISIBLE = false;
+const TRASH_VISIBLE = true;
 
 export default function ResourceList() {
   const [resources, setResources] = useState<Resource[]>([]);
