@@ -53,8 +53,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             href="https://beian.miit.gov.cn/"
             target="_blank"
             rel="noreferrer"
-            className="hover:text-zinc-600 transition-colors"
+            className="inline-flex items-center gap-1.5 hover:text-zinc-600 transition-colors"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icp.png" alt="ICP备案" width={18} height={20} className="inline-block" />
             黑ICP备2026008951号
           </a>
         </footer>
