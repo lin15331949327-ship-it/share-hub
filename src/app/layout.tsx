@@ -48,6 +48,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <PwaRegister />
         <VercelNotice />
         <SeedRunner />
+        <footer className="border-t border-zinc-100 py-6 text-center text-xs text-zinc-400">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-zinc-600 transition-colors"
+          >
+            黑ICP备2026008951号
+          </a>
+        </footer>
       </body>
     </html>
   );
