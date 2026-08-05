@@ -57,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icp.png" alt="ICP备案" width={18} height={20} className="inline-block" />
-            黑ICP备2026008951号
+            黑ICP备2026008951号-1
           </a>
         </footer>
       </body>
